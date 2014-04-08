@@ -1,0 +1,74 @@
+<configuration name="sofia.conf" description="sofia Endpoint">
+
+  <global_settings>
+    <param name="log-level" value="0"/>
+    <!-- <param name="auto-restart" value="false"/> -->
+    <param name="debug-presence" value="0"/>
+  </global_settings>
+
+  <profiles>
+	<profile name="fax">
+	  <gateways>
+	  <X-PRE-PROCESS cmd="include" data="../gateways/*.xml"/>
+	  </gateways>
+
+	  <domains>
+	    <domain name="all" alias="false" parse="false"/>
+	  </domains>
+
+	  <settings>
+	    <param name="debug" value="0"/>
+	    <param name="shutdown-on-fail" value="true"/>
+	    <param name="sip-trace" value="no"/>
+	    <param name="sip-capture" value="no"/>
+	    <param name="rfc2833-pt" value="101"/>
+	    <!--<param name="enable-rfc-5626" value="true"/> -->
+
+	    <param name="dialplan" value="inline:socket:127.0.0.1:8022 async full"/>
+	    <param name="context" value="incoming"/>
+
+	    <param name="dtmf-duration" value="2000"/>
+	    <param name="codec-prefs" value="PCMA,PCMU"/>
+	    <param name="disable-hold" value="true"/>
+	    
+	    <param name="rtp-timer-name" value="timerfd"/>
+	    <param name="local-network-acl" value="localnet.auto"/>
+	    <param name="manage-presence" value="false"/>
+
+	    <param name="inbound-codec-negotiation" value="generous"/>
+	    <param name="nonce-ttl" value="60"/>
+	    <param name="auth-calls" value="false"/>
+	    <param name="disable-register" value="true"/>
+
+	    <param name="inbound-late-negotiation" value="false"/>
+	    <param name="inbound-zrtp-passthru" value="false"/>
+
+	    <param name="sip-port" value="5060"/>
+	    <param name="rtp-ip" value="$${sofia_ip}"/>
+	    <param name="sip-ip" value="$${sofia_ip}"/>
+	    <param name="ext-rtp-ip" value="$${sofia_ip}"/>
+	    <param name="ext-sip-ip" value="$${sofia_ip}"/>
+
+	    <param name="rtp-timeout-sec" value="300"/>
+	    <param name="rtp-hold-timeout-sec" value="1800"/>
+
+	    <param name="tls" value="false"/>
+	    <param name="tls-only" value="false"/>
+	    <param name="tls-bind-params" value="transport=tls"/>
+	    <param name="tls-sip-port" value="5061"/>
+	    <!-- Location of the agent.pem and cafile.pem ssl certificates (needed for TLS server) -->
+	    <param name="tls-cert-dir" value="$${base_dir}/conf/ssl"/>
+	    <param name="tls-passphrase" value=""/>
+	    <param name="tls-verify-date" value="true"/>
+	    <!-- set to 'in' to only verify incoming connections, 'out' to only verify outgoing connections, 'all' to verify all connections, also 'in_subjects', 'out_subjects' and 'all_subjects' for subject validation. Multiple policies can be split with a '|' pipe -->
+	    <param name="tls-verify-policy" value="none"/>
+	    <param name="tls-verify-depth" value="2"/>
+	    <!-- If the tls-verify-policy is set to subjects_all or subjects_in this sets which subjects are allowed, multiple subjects can be split with a '|' pipe -->
+	    <param name="tls-verify-in-subjects" value=""/>
+	    <!-- TLS version ("sslv23" (default), "tlsv1"). NOTE: Phones may not work with TLSv1 -->
+	    <param name="tls-version" value="tlsv1"/>
+	  </settings>
+	</profile>
+  </profiles>
+
+</configuration>

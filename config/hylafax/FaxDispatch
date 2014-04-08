@@ -1,0 +1,14 @@
+#!/bin/bash
+#
+# Example FaxDispatch script
+# See FAXRCVD(8) for documentation
+#
+# CALLERID fields populated by GOfax.IP:
+# CALLERID1 -> Callerid-Number
+# CALLERID2 -> Callerid-Name
+# CALLERID3 -> Recipent (SIP To-User)
+#
+
+SENDTO=lindenberg@gonicus.de
+NOTIFY_FAXMASTER=never
+FILETYPE=pdf

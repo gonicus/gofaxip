@@ -1,0 +1,13 @@
+<include>
+	<gateway name="default">
+		<param name="realm" value="your.pbx.host.example.com"/>
+		<param name="username" value="foo"/>
+		<param name="password" value="bar"/>
+
+		<param name="caller-id-in-from" value="true"/>
+		<param name="extension-in-contact" value="true"/>
+
+		<!--send an options ping every x seconds, failure will unregister and/or mark it down-->
+		<!--<param name="ping" value="25"/>-->
+	</gateway>
+</include>

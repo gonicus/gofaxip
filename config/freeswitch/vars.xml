@@ -1,0 +1,5 @@
+<include>
+
+  <X-PRE-PROCESS cmd="set" data="sofia_ip=172.16.25.30"/>
+
+</include>
