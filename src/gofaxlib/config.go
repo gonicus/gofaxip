@@ -25,10 +25,11 @@ type config struct {
 		Modems   uint64
 	}
 	Gofaxd struct {
-		Socket      string
-		Answerafter uint64
-		Waittime    uint64
-		FaxRcvdCmd  string
+		Socket        string
+		Answerafter   uint64
+		Waittime      uint64
+		FaxRcvdCmd    string
+		DynamicConfig string
 	}
 }
 

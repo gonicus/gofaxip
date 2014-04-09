@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	APPENDLOG_FLAGS = log.Ldate | log.Ltime
+	APPENDLOG_FLAGS = log.Ldate | log.Ltime | log.Lmicroseconds
 )
 
 // Append line to file (adding line break)

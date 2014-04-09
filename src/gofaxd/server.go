@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strconv"
+	"strings"
 )
 
 const (
@@ -73,11 +74,43 @@ func (e *EventSocketServer) handler(c *eventsocket.Connection) {
 		logger.Logger.Print(err)
 		return
 	}
+	defer logger.Logger.Println(channel_uuid, "Handler ending")
 
 	// Filter and subscribe to events
 	c.Send("linger")
 	c.Send(fmt.Sprintf("filter Unique-ID %v", channel_uuid))
 	c.Send("event plain CHANNEL_CALLSTATE CUSTOM spandsp::rxfaxnegociateresult spandsp::rxfaxpageresult spandsp::rxfaxresult")
+
+	// Extract Caller/Callee
+	recipient := connectev.Get("Variable_sip_to_user")
+	cidname := connectev.Get("Channel-Caller-Id-Name")
+	cidnum := connectev.Get("Channel-Caller-Id-Number")
+
+	logger.Logger.Printf("Incoming call to %v from %v <%v>", recipient, cidname, cidnum)
+
+	// Query DynamicConfig
+	if dc_cmd := gofaxlib.Config.Gofaxd.DynamicConfig; dc_cmd != "" {
+		logger.Logger.Println("Calling DynamicConfig script", dc_cmd)
+		dc, err := gofaxlib.DynamicConfig(dc_cmd, cidnum, cidname, recipient)
+		if err != nil {
+			logger.Logger.Println("Error calling DynamicConfig:", err)
+		} else {
+			if rejectval := dc.GetFirst("RejectCall"); rejectval != "" {
+				switch strings.ToLower(rejectval) {
+				case "true":
+					fallthrough
+				case "1":
+					fallthrough
+				case "yes":
+					logger.Logger.Println("DynamicConfig decided to reject this call")
+					c.Execute("respond", "404", true)
+					c.Send("exit")
+					return
+				}
+			}
+		}
+
+	}
 
 	// Fetch commid and log file name
 	commseq, err := gofaxlib.GetSeqFor(LOG_DIR)
@@ -88,6 +121,7 @@ func (e *EventSocketServer) handler(c *eventsocket.Connection) {
 	}
 	commid := fmt.Sprintf(COMMID_FORMAT, commseq)
 	logfile := filepath.Join(LOG_DIR, fmt.Sprintf(LOG_FILE_FORMAT, commid))
+	logger.Logger.Println(channel_uuid, "Logging events for commid", commid, "to", logfile)
 
 	// Create a logging function that will log both to syslog and the session
 	// log file for this commid
@@ -99,11 +133,7 @@ func (e *EventSocketServer) handler(c *eventsocket.Connection) {
 		}
 	}
 
-	// Extract Caller/Callee
-	recipient := connectev.Get("Variable_sip_to_user")
-	cidname := connectev.Get("Channel-Caller-Id-Name")
-	cidnum := connectev.Get("Channel-Caller-Id-Number")
-	logfunc(fmt.Sprintf("Incoming call to %v from %v <%v>", recipient, cidname, cidnum))
+	logfunc(fmt.Sprintf("Accepting call to %v from %v <%v> with commid %v", recipient, cidname, cidnum, commid))
 
 	// Start interacting with the caller
 
@@ -178,10 +208,11 @@ EventLoop:
 	cmd := exec.Command(rcvdcmd, filename, "freeswitch1", commid, errmsg, cidnum, cidname, recipient)
 	logfunc("Calling", cmd.Path, cmd.Args)
 	if output, err := cmd.CombinedOutput(); err != nil {
-		logfunc(rcvdcmd, "returned error:", err)
+		logfunc(cmd.Path, "ended with", err)
 		logfunc(output)
+	} else {
+		logfunc(cmd.Path, "ended successfully")
 	}
 
-	logger.Logger.Println(channel_uuid, "Handler ending")
 	return
 }
