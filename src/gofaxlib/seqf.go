@@ -14,8 +14,8 @@ const (
 func GetSeqFor(subdir string) (seq uint64, err error) {
 	seqfname := filepath.Join(Config.Hylafax.Spooldir, subdir, SEQ_FILE_NAME)
 
-	seqf, err := os.OpenFile(seqfname, os.O_RDWR, 0666)
-	if err != nil {
+	seqf, err := os.OpenFile(seqfname, os.O_RDWR|os.O_CREATE, 0666)
+	if err != nil && !os.IsNotExist(err) {
 		return
 	}
 	defer seqf.Close()
@@ -24,7 +24,7 @@ func GetSeqFor(subdir string) (seq uint64, err error) {
 		return
 	}
 
-	if _, err = fmt.Fscan(seqf, &seq); err != nil {
+	if _, err = fmt.Fscan(seqf, &seq); err != nil && err.Error() != "EOF" {
 		return
 	}
 

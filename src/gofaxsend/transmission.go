@@ -113,13 +113,16 @@ func (t *transmission) start() {
 	if err != nil {
 		t.conn.Send(fmt.Sprintf("uuid_dump %v", t.faxjob.UUID))
 		hangupcause := strings.TrimSpace(err.Error())
-		logger.Logger.Printf("Originate failed with hangup cause %v", hangupcause)
+		logger.Logger.Println("Originate failed with hangup cause", hangupcause)
 		t.errorChan <- NewFaxError(hangupcause, true)
 		return
 	}
-	logger.Logger.Printf("%v Originate successful", t.faxjob.UUID)
+	logger.Logger.Println(t.faxjob.UUID, "Originate successful")
 
-	result := gofaxlib.NewFaxResult(t.faxjob.UUID)
+	result := gofaxlib.NewFaxResult(t.faxjob.UUID, func(v ...interface{}) {
+		uuid_values := append([]interface{}{t.faxjob.UUID}, v...)
+		logger.Logger.Println(uuid_values...)
+	})
 	es := gofaxlib.NewEventStream(t.conn)
 	var pages uint
 

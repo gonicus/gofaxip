@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/fiorix/go-eventsocket/eventsocket"
-	"gofaxlib/logger"
 	"strconv"
 	"strings"
 )
@@ -55,8 +54,12 @@ func (p PageResult) String() string {
 		p.ImagePixelSize, p.EncodingName, p.ImageSize, p.BadRows)
 }
 
+type logfunc func(...interface{})
+
 type FaxResult struct {
-	uuid        uuid.UUID
+	uuid    uuid.UUID
+	logfunc logfunc
+
 	Hangupcause string
 
 	TotalPages       uint
@@ -71,9 +74,10 @@ type FaxResult struct {
 	PageResults []PageResult
 }
 
-func NewFaxResult(uuid uuid.UUID) *FaxResult {
+func NewFaxResult(uuid uuid.UUID, logfunc logfunc) *FaxResult {
 	f := &FaxResult{
-		uuid: uuid,
+		uuid:    uuid,
+		logfunc: logfunc,
 	}
 	return f
 }
@@ -83,7 +87,7 @@ func (f *FaxResult) AddEvent(ev *eventsocket.Event) {
 	case "CHANNEL_CALLSTATE":
 		// Call state has changed
 		callstate := ev.Get("Channel-Call-State")
-		logger.Logger.Printf("%v Call state change: %v", f.uuid, callstate)
+		f.logfunc("Call state change:", callstate)
 		if callstate == "HANGUP" {
 			f.Hangupcause = ev.Get("Hangup-Cause")
 		}
@@ -102,7 +106,7 @@ func (f *FaxResult) AddEvent(ev *eventsocket.Event) {
 			if rate, err := strconv.ParseUint(ev.Get("Fax-Transfer-Rate"), 10, 0); err == nil {
 				f.TransferRate = uint(rate)
 			}
-			logger.Logger.Printf("%v Fax Negotiation Result: Remote ID: \"%v\", Transfer Rate: %v, ECM=%v", f.uuid, f.RemoteID, f.TransferRate, f.Ecm)
+			f.logfunc(fmt.Sprintf("Remote ID: \"%v\", Transfer Rate: %v, ECM=%v", f.RemoteID, f.TransferRate, f.Ecm))
 
 		case "spandsp::rxfaxpageresult":
 			action = "received"
@@ -143,7 +147,7 @@ func (f *FaxResult) AddEvent(ev *eventsocket.Event) {
 			}
 
 			f.PageResults = append(f.PageResults, *pr)
-			logger.Logger.Printf("%v Page %d %v: %v", f.uuid, f.TransferredPages, action, *pr)
+			f.logfunc(fmt.Sprintf("Page %d %v: %v", f.TransferredPages, action, *pr))
 
 		case "spandsp::rxfaxresult":
 			fallthrough

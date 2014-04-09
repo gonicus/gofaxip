@@ -12,7 +12,10 @@ import (
 )
 
 const (
-	RECVQ_FILE_FORMAT   = "fax%09d.tif"
+	LOG_DIR             = "log"
+	COMMID_FORMAT       = "%08d"
+	LOG_FILE_FORMAT     = "c%s"
+	RECVQ_FILE_FORMAT   = "fax%08d.tif"
 	RECVQ_DIR           = "recvq"
 	DEFAULT_FAXRCVD_CMD = "bin/faxrcvd"
 )
@@ -55,7 +58,7 @@ func (e *EventSocketServer) Kill() {
 
 // Handle incoming call
 func (e *EventSocketServer) handler(c *eventsocket.Connection) {
-	logger.Logger.Print("Incoming Event Socket connection from ", c.RemoteAddr())
+	logger.Logger.Println("Incoming Event Socket connection from", c.RemoteAddr())
 
 	connectev, err := c.Send("connect") // Returns: Ganzer Event mit alles
 	if err != nil {
@@ -71,15 +74,38 @@ func (e *EventSocketServer) handler(c *eventsocket.Connection) {
 		return
 	}
 
-	recipient := connectev.Get("Variable_sip_to_user")
-	cidname := connectev.Get("Channel-Caller-Id-Name")
-	cidnum := connectev.Get("Channel-Caller-Id-Number")
-
-	logger.Logger.Printf("%v Incoming call to %v from %v <%v>", channel_uuid, recipient, cidname, cidnum)
-
+	// Filter and subscribe to events
 	c.Send("linger")
 	c.Send(fmt.Sprintf("filter Unique-ID %v", channel_uuid))
 	c.Send("event plain CHANNEL_CALLSTATE CUSTOM spandsp::rxfaxnegociateresult spandsp::rxfaxpageresult spandsp::rxfaxresult")
+
+	// Fetch commid and log file name
+	commseq, err := gofaxlib.GetSeqFor(LOG_DIR)
+	if err != nil {
+		c.Send("exit")
+		logger.Logger.Print(err)
+		return
+	}
+	commid := fmt.Sprintf(COMMID_FORMAT, commseq)
+	logfile := filepath.Join(LOG_DIR, fmt.Sprintf(LOG_FILE_FORMAT, commid))
+
+	// Create a logging function that will log both to syslog and the session
+	// log file for this commid
+	logfunc := func(v ...interface{}) {
+		uuid_values := append([]interface{}{channel_uuid}, v...)
+		logger.Logger.Println(uuid_values...)
+		if logerr := gofaxlib.AppendLog(logfile, v...); logerr != nil {
+			logger.Logger.Print(logerr)
+		}
+	}
+
+	// Extract Caller/Callee
+	recipient := connectev.Get("Variable_sip_to_user")
+	cidname := connectev.Get("Channel-Caller-Id-Name")
+	cidnum := connectev.Get("Channel-Caller-Id-Number")
+	logfunc(fmt.Sprintf("Incoming call to %v from %v <%v>", recipient, cidname, cidnum))
+
+	// Start interacting with the caller
 
 	if gofaxlib.Config.Gofaxd.Answerafter != 0 {
 		c.Execute("ring_ready", "", true)
@@ -92,22 +118,24 @@ func (e *EventSocketServer) handler(c *eventsocket.Connection) {
 		c.Execute("playback", "silence_stream://"+strconv.FormatUint(gofaxlib.Config.Gofaxd.Waittime, 10), true)
 	}
 
-	c.Execute("set", "fax_enable_t38_request=true", true)
-	c.Execute("set", "fax_enable_t38=true", true)
-
+	// Find filename in recvq to save received .tif
 	seq, err := gofaxlib.GetSeqFor(RECVQ_DIR)
 	if err != nil {
 		c.Send("exit")
-		logger.Logger.Print(err)
+		logfunc(err)
 		return
 	}
 	filename := filepath.Join(RECVQ_DIR, fmt.Sprintf(RECVQ_FILE_FORMAT, seq))
 	filename_abs := filepath.Join(gofaxlib.Config.Hylafax.Spooldir, filename)
 
-	logger.Logger.Printf("%v Rxfax to %v", channel_uuid, filename_abs)
+	logfunc("Rxfax to", filename_abs)
+
+	c.Execute("set", "fax_enable_t38_request=true", true)
+	c.Execute("set", "fax_enable_t38=true", true)
+	c.Execute("set", fmt.Sprintf("fax_ident=%s", gofaxlib.Config.Freeswitch.Ident), true)
 	c.Execute("rxfax", filename_abs, true)
 
-	result := gofaxlib.NewFaxResult(channel_uuid)
+	result := gofaxlib.NewFaxResult(channel_uuid, logfunc)
 	es := gofaxlib.NewEventStream(c)
 
 EventLoop:
@@ -115,27 +143,27 @@ EventLoop:
 		select {
 		case ev := <-es.Events():
 			if ev.Get("Content-Type") == "text/disconnect-notice" {
-				logger.Logger.Printf("%v Received disconnect message", channel_uuid)
+				logfunc("Received disconnect message")
 				c.Close()
 				break EventLoop
 			}
 			result.AddEvent(ev)
 		case err := <-es.Errors():
 			if err.Error() == "EOF" {
-				logger.Logger.Printf("%v Event socket client disconnected", channel_uuid)
+				logfunc("Event socket client disconnected")
 			} else {
-				logger.Logger.Print(channel_uuid, " Error: ", err)
+				logfunc("Error:", err)
 			}
 			break EventLoop
 		case _ = <-e.killChan:
-			logger.Logger.Printf("%v Kill reqeust received, destroying channel", channel_uuid)
+			logfunc("Kill reqeust received, destroying channel")
 			c.Send(fmt.Sprintf("api uuid_kill %v", channel_uuid))
 			c.Close()
 			return
 		}
 	}
 
-	logger.Logger.Printf("%v Success: %v, Hangup Cause: %v, Result: %v", channel_uuid, result.Success, result.Hangupcause, result.ResultText)
+	logfunc(fmt.Sprintf("Success: %v, Hangup Cause: %v, Result: %v", result.Success, result.Hangupcause, result.ResultText))
 
 	// Process received file
 	rcvdcmd := gofaxlib.Config.Gofaxd.FaxRcvdCmd
@@ -147,13 +175,13 @@ EventLoop:
 		errmsg = result.ResultText
 	}
 
-	logger.Logger.Printf("%v running %v", channel_uuid, rcvdcmd)
-	cmd := exec.Command(rcvdcmd, filename, "freeswitch1", fmt.Sprintf("%09d", seq), errmsg, cidnum, cidname, recipient)
-	_, err = cmd.CombinedOutput()
-	if err != nil {
-		logger.Logger.Printf("%s %s returned error: %v", channel_uuid, rcvdcmd, err)
+	cmd := exec.Command(rcvdcmd, filename, "freeswitch1", commid, errmsg, cidnum, cidname, recipient)
+	logfunc("Calling", cmd.Path, cmd.Args)
+	if output, err := cmd.CombinedOutput(); err != nil {
+		logfunc(rcvdcmd, "returned error:", err)
+		logfunc(output)
 	}
 
-	logger.Logger.Printf("%s Handler ending", channel_uuid)
+	logger.Logger.Println(channel_uuid, "Handler ending")
 	return
 }
