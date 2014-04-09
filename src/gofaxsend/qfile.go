@@ -32,6 +32,7 @@ func OpenQfile(filename string) (*Qfile, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer qfh.Close()
 
 	q := new(Qfile)
 	q.filename = filename
@@ -39,7 +40,6 @@ func OpenQfile(filename string) (*Qfile, error) {
 	// Lock queue file using flock (like Hylafax)
 	err = syscall.Flock(int(qfh.Fd()), syscall.LOCK_EX)
 	if err != nil {
-		qfh.Close()
 		return nil, err
 	}
 
@@ -49,19 +49,16 @@ func OpenQfile(filename string) (*Qfile, error) {
 	for scanner.Scan() {
 		parts := strings.SplitN(scanner.Text(), ":", 2)
 		if len(parts) != 2 {
-			qfh.Close()
 			return nil, errors.New(fmt.Sprintf("%s: Error parsing line %d", filename, line))
 		}
 		q.params = append(q.params, param{strings.TrimSpace(parts[0]), strings.TrimSpace(parts[1])})
 		line++
 	}
 	if err = scanner.Err(); err != nil {
-		qfh.Close()
 		return nil, err
 	}
 
 	return q, nil
-
 }
 
 func (q *Qfile) Write() error {

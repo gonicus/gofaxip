@@ -60,6 +60,7 @@ func main() {
 
 		if err != nil {
 			logger.Logger.Printf("Error processing qfile %v: %v", qfilename, err)
+			break
 		}
 	}
 
