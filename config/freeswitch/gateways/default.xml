@@ -7,6 +7,9 @@
 		<param name="caller-id-in-from" value="true"/>
 		<param name="extension-in-contact" value="true"/>
 
+		<!-- uncomment to disable registering at the gateway -->
+		<!-- <param name="register" value="false"/> -->
+
 		<!--send an options ping every x seconds, failure will unregister and/or mark it down-->
 		<!--<param name="ping" value="25"/>-->
 	</gateway>
