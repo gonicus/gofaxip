@@ -140,7 +140,7 @@ func SendQfile(devicename string, qfilename string) (int, error) {
 				}
 			} else {
 				// Negotiation finished
-				negstatus := fmt.Sprint("Sending", result.TransferRate)
+				negstatus := fmt.Sprint("Sending ", result.TransferRate)
 				if result.Ecm {
 					negstatus = negstatus + "/ECM"
 				}

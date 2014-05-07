@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"gofaxlib"
-	//"gofaxlib/device"
 	"gofaxlib/logger"
 	"log"
 	"os"
@@ -16,6 +15,7 @@ import (
 const (
 	DEFAULT_CONFIGFILE = "/etc/gofax.conf"
 	PRODUCT_NAME       = "GOfax.IP"
+	MODEM_PREFIX       = "freeswitch"
 )
 
 var (
@@ -27,6 +27,8 @@ var (
 	// Version can be set at build time using:
 	//    -ldflags "-X main.version 0.42"
 	version string
+
+	devmanager *manager
 )
 
 func init() {
@@ -56,28 +58,32 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// Shut down receiving lines when killed
 	sigchan := make(chan os.Signal, 1)
 	signal.Notify(sigchan, syscall.SIGTERM, syscall.SIGINT)
 
+	// Start modem device manager
+	var err error
+	devmanager, err = NewManager(MODEM_PREFIX, gofaxlib.Config.Hylafax.Modems)
+	if err != nil {
+		logger.Logger.Fatal(err)
+	}
+
+	// Start event socket server to handle incoming calls
 	server := NewEventSocketServer()
 	server.Start()
 
 	// Block until something happens
 	select {
 	case err := <-server.Errors():
-		logger.Logger.Print(err)
-		log.Fatal(err)
+		logger.Logger.Fatal(err)
 	case sig := <-sigchan:
 		logger.Logger.Print("Received ", sig, ", killing all channels")
 		server.Kill()
+		devmanager.SetAllDown()
 		time.Sleep(3 * time.Second)
 		logger.Logger.Print("Terminating")
 		os.Exit(1)
 	}
-
-	// _, err := device.NewDevice("freeswitch1")
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
 
 }

@@ -7,11 +7,13 @@ import (
 	"gofaxlib/logger"
 	"log"
 	"os"
+	"path/filepath"
 )
 
 const (
 	DEFAULT_CONFIGFILE = "/etc/gofax.conf"
 	PRODUCT_NAME       = "GOfax.IP"
+	FIFO_PREFIX        = "FIFO."
 )
 
 var (
@@ -55,6 +57,10 @@ func main() {
 
 	var err error
 	returned := 1 // Exit code
+
+	devicefifo := filepath.Join(gofaxlib.Config.Hylafax.Spooldir, FIFO_PREFIX+*device_id)
+	gofaxlib.SendFIFO(devicefifo, "SB")
+
 	for _, qfilename := range flag.Args() {
 		returned, err = SendQfile(*device_id, qfilename)
 
@@ -63,6 +69,8 @@ func main() {
 			break
 		}
 	}
+
+	gofaxlib.SendFIFO(devicefifo, "SR")
 
 	logger.Logger.Print("Exiting with status ", returned)
 	os.Exit(returned)

@@ -151,7 +151,7 @@ func (t *transmission) start() {
 			logger.Logger.Printf("%v Received signal %v, destroying channel", t.faxjob.UUID, kill)
 			t.conn.Send(fmt.Sprintf("api uuid_kill %v", t.faxjob.UUID))
 			os.Remove(t.faxjob.Filename)
-			os.Exit(1)
+			t.errorChan <- NewFaxError(fmt.Sprintf("Killed by signal %v", kill), false)
 		}
 	}
 

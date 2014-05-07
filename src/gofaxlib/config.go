@@ -22,14 +22,15 @@ type config struct {
 	}
 	Hylafax struct {
 		Spooldir string
-		Modems   uint64
+		Modems   uint
 	}
 	Gofaxd struct {
-		Socket        string
-		Answerafter   uint64
-		Waittime      uint64
-		FaxRcvdCmd    string
-		DynamicConfig string
+		Socket                  string
+		Answerafter             uint64
+		Waittime                uint64
+		FaxRcvdCmd              string
+		DynamicConfig           string
+		AllocateOutboundDevices bool
 	}
 }
 

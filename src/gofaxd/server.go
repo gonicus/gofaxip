@@ -19,6 +19,7 @@ const (
 	RECVQ_FILE_FORMAT   = "fax%08d.tif"
 	RECVQ_DIR           = "recvq"
 	DEFAULT_FAXRCVD_CMD = "bin/faxrcvd"
+	DEFAULT_DEVICE      = "freeswitch"
 )
 
 type EventSocketServer struct {
@@ -112,6 +113,18 @@ func (e *EventSocketServer) handler(c *eventsocket.Connection) {
 
 	}
 
+	var device *Device
+	if gofaxlib.Config.Gofaxd.AllocateOutboundDevices {
+		// Find free device
+		device, err := devmanager.FindDevice(fmt.Sprintf("Receiving facsimile"))
+		if err != nil {
+			logger.Logger.Println(err)
+			c.Execute("respond", "404", true)
+			c.Send("exit")
+		}
+		defer device.SetReady()
+	}
+
 	// Fetch commid and log file name
 	commseq, err := gofaxlib.GetSeqFor(LOG_DIR)
 	if err != nil {
@@ -134,6 +147,14 @@ func (e *EventSocketServer) handler(c *eventsocket.Connection) {
 	}
 
 	logfunc(fmt.Sprintf("Accepting call to %v from %v <%v> with commid %v", recipient, cidname, cidnum, commid))
+
+	if device != nil {
+		// Notify faxq
+		gofaxlib.Faxq.ModemStatus(device.Name, "I"+commid)
+		gofaxlib.Faxq.ReceiveStatus(device.Name, "B")
+		gofaxlib.Faxq.ReceiveStatus(device.Name, "S")
+		defer gofaxlib.Faxq.ReceiveStatus(device.Name, "E")
+	}
 
 	// Start interacting with the caller
 
@@ -168,6 +189,8 @@ func (e *EventSocketServer) handler(c *eventsocket.Connection) {
 	result := gofaxlib.NewFaxResult(channel_uuid, logfunc)
 	es := gofaxlib.NewEventStream(c)
 
+	pages := result.TransferredPages
+
 EventLoop:
 	for {
 		select {
@@ -178,6 +201,12 @@ EventLoop:
 				break EventLoop
 			}
 			result.AddEvent(ev)
+			if pages != result.TransferredPages {
+				pages = result.TransferredPages
+				if device != nil {
+					gofaxlib.Faxq.ReceiveStatus(device.Name, "P")
+				}
+			}
 		case err := <-es.Errors():
 			if err.Error() == "EOF" {
 				logfunc("Event socket client disconnected")
@@ -193,6 +222,9 @@ EventLoop:
 		}
 	}
 
+	if device != nil {
+		gofaxlib.Faxq.ReceiveStatus(device.Name, "D")
+	}
 	logfunc(fmt.Sprintf("Success: %v, Hangup Cause: %v, Result: %v", result.Success, result.Hangupcause, result.ResultText))
 
 	// Process received file
@@ -205,7 +237,14 @@ EventLoop:
 		errmsg = result.ResultText
 	}
 
-	cmd := exec.Command(rcvdcmd, filename, "freeswitch1", commid, errmsg, cidnum, cidname, recipient)
+	var used_device string
+	if device != nil {
+		used_device = device.Name
+	} else {
+		used_device = DEFAULT_DEVICE
+	}
+
+	cmd := exec.Command(rcvdcmd, filename, used_device, commid, errmsg, cidnum, cidname, recipient)
 	logfunc("Calling", cmd.Path, cmd.Args)
 	if output, err := cmd.CombinedOutput(); err != nil {
 		logfunc(cmd.Path, "ended with", err)
