@@ -62,7 +62,7 @@ func main() {
 	gofaxlib.SendFIFO(devicefifo, "SB")
 
 	for _, qfilename := range flag.Args() {
-		returned, err = SendQfile(*device_id, qfilename)
+		returned, err = SendQfile(qfilename)
 
 		if err != nil {
 			logger.Logger.Printf("Error processing qfile %v: %v", qfilename, err)

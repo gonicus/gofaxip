@@ -21,8 +21,9 @@ type config struct {
 		Cidname  string
 	}
 	Hylafax struct {
-		Spooldir string
-		Modems   uint
+		Spooldir   string
+		Modems     uint
+		Xferfaxlog string
 	}
 	Gofaxd struct {
 		Socket                  string

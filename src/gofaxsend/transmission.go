@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/fiorix/go-eventsocket/eventsocket"
 	"gofaxlib"
-	"gofaxlib/logger"
 	"os"
 	"os/signal"
 	"strconv"
@@ -16,23 +15,26 @@ type transmission struct {
 	faxjob FaxJob
 	conn   *eventsocket.Connection
 
-	pageChan   chan gofaxlib.PageResult
+	pageChan   chan *gofaxlib.PageResult
 	errorChan  chan FaxError
-	resultChan chan gofaxlib.FaxResult
+	resultChan chan *gofaxlib.FaxResult
+
+	sessionlog gofaxlib.SessionLogger
 }
 
-func Transmit(faxjob FaxJob) *transmission {
+func Transmit(faxjob FaxJob, sessionlog gofaxlib.SessionLogger) *transmission {
 	t := &transmission{
 		faxjob:     faxjob,
-		pageChan:   make(chan gofaxlib.PageResult),
+		pageChan:   make(chan *gofaxlib.PageResult),
 		errorChan:  make(chan FaxError),
-		resultChan: make(chan gofaxlib.FaxResult),
+		resultChan: make(chan *gofaxlib.FaxResult),
+		sessionlog: sessionlog,
 	}
 	go t.start()
 	return t
 }
 
-func (t *transmission) PageSent() <-chan gofaxlib.PageResult {
+func (t *transmission) PageSent() <-chan *gofaxlib.PageResult {
 	return t.pageChan
 }
 
@@ -40,7 +42,7 @@ func (t *transmission) Errors() <-chan FaxError {
 	return t.errorChan
 }
 
-func (t *transmission) Result() <-chan gofaxlib.FaxResult {
+func (t *transmission) Result() <-chan *gofaxlib.FaxResult {
 	return t.resultChan
 }
 
@@ -105,24 +107,22 @@ func (t *transmission) start() {
 	ds_gateways := strings.Join(ds_gateways_strings, "|")
 
 	dialstring := fmt.Sprintf("{%v}%v", ds_variables, ds_gateways)
-	//logger.Logger.Printf("%v Dialstring: %v", faxjob.UUID, dialstring)
+	//t.sessionlog.Log(fmt.Sprintf("%v Dialstring: %v", faxjob.UUID, dialstring))
 
 	// Originate call
-	logger.Logger.Printf("%v Originating channel to %v", t.faxjob.UUID, t.faxjob.Number)
+	t.sessionlog.Log("Originating channel to", t.faxjob.Number)
 	_, err = t.conn.Send(fmt.Sprintf("api originate %v, &txfax(%v)", dialstring, t.faxjob.Filename))
 	if err != nil {
 		t.conn.Send(fmt.Sprintf("uuid_dump %v", t.faxjob.UUID))
 		hangupcause := strings.TrimSpace(err.Error())
-		logger.Logger.Println("Originate failed with hangup cause", hangupcause)
+		t.sessionlog.Log("Originate failed with hangup cause", hangupcause)
 		t.errorChan <- NewFaxError(hangupcause, true)
 		return
 	}
-	logger.Logger.Println(t.faxjob.UUID, "Originate successful")
+	t.sessionlog.Log("Originate successful")
 
-	result := gofaxlib.NewFaxResult(t.faxjob.UUID, func(v ...interface{}) {
-		uuid_values := append([]interface{}{t.faxjob.UUID}, v...)
-		logger.Logger.Println(uuid_values...)
-	})
+	result := gofaxlib.NewFaxResult(t.faxjob.UUID, t.sessionlog)
+
 	es := gofaxlib.NewEventStream(t.conn)
 	var pages uint
 
@@ -135,20 +135,20 @@ func (t *transmission) start() {
 		case ev := <-es.Events():
 			result.AddEvent(ev)
 			if result.Hangupcause != "" {
-				t.resultChan <- *result
+				t.resultChan <- result
 				return
 			}
 			if ev.Get("Event-Subclass") == "spandsp::txfaxnegociateresult" {
-				t.resultChan <- *result
+				t.resultChan <- result
 			} else if result.TransferredPages != pages {
 				pages = result.TransferredPages
-				t.pageChan <- result.PageResults[pages-1]
+				t.pageChan <- &result.PageResults[pages-1]
 			}
 		case err := <-es.Errors():
 			t.errorChan <- NewFaxError(err.Error(), true)
 			return
 		case kill := <-sigchan:
-			logger.Logger.Printf("%v Received signal %v, destroying channel", t.faxjob.UUID, kill)
+			t.sessionlog.Log(fmt.Sprintf("%v Received signal %v, destroying channel", t.faxjob.UUID, kill))
 			t.conn.Send(fmt.Sprintf("api uuid_kill %v", t.faxjob.UUID))
 			os.Remove(t.faxjob.Filename)
 			t.errorChan <- NewFaxError(fmt.Sprintf("Killed by signal %v", kill), false)

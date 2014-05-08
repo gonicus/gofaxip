@@ -18,13 +18,7 @@ const (
 	SEND_REFORMAT
 )
 
-type HylafaxMetadata struct {
-	Commid string
-	Jobid  uint
-	Jobtag string
-}
-
-func SendQfile(devicename string, qfilename string) (int, error) {
+func SendQfile(qfilename string) (int, error) {
 	var err error
 
 	// Open qfile
@@ -33,15 +27,11 @@ func SendQfile(devicename string, qfilename string) (int, error) {
 		return SEND_FAILED, errors.New(fmt.Sprintf("Cannot open qfile %v: %v", qfilename, err))
 	}
 
-	// Get Metadata from qfile
-	meta := &HylafaxMetadata{
-		Jobtag: qf.GetFirst("jobtag"),
-		Commid: qf.GetFirst("commid"),
-	}
+	var jobid uint64
 
-	if jobid := qf.GetFirst("jobid"); jobid != "" {
-		if jobid, err := strconv.ParseUint(jobid, 10, 0); err == nil {
-			meta.Jobid = uint(jobid)
+	if jobidstr := qf.GetFirst("jobid"); jobidstr != "" {
+		if jobid, err = strconv.ParseUint(jobidstr, 10, 0); err != nil {
+			logger.Logger.Println("Error parsing jobid")
 		}
 	}
 
@@ -60,7 +50,15 @@ func SendQfile(devicename string, qfilename string) (int, error) {
 		}
 	}
 
-	logger.Logger.Printf("Processing HylaFAX Job %d as %v", meta.Jobid, faxjob.UUID)
+	sessionlog, err := gofaxlib.NewSessionLogger()
+	if err != nil {
+		return SEND_FAILED, err
+	}
+
+	qf.Set("commid", sessionlog.CommId())
+
+	logger.Logger.Println("Logging events for commid", sessionlog.CommId(), "to", sessionlog.Logfile())
+	sessionlog.Log(fmt.Sprintf("Processing HylaFAX Job %d as %v", jobid, faxjob.UUID))
 
 	// Add TIFFs from queue file
 	faxparts := qf.GetAll("fax")
@@ -107,11 +105,11 @@ func SendQfile(devicename string, qfilename string) (int, error) {
 	totdials++
 	qf.Set("totdials", strconv.Itoa(totdials))
 	if err = qf.Write(); err != nil {
-		logger.Logger.Printf("%v Error updating qfile %v", faxjob.UUID, qf.filename)
+		sessionlog.Log("%v Error updating qfile %v", faxjob.UUID, qf.filename)
 	}
 
-	t := Transmit(*faxjob)
-	var result gofaxlib.FaxResult
+	t := Transmit(*faxjob, sessionlog)
+	var result *gofaxlib.FaxResult
 
 	// Wait for events
 	returned := SEND_RETRY
@@ -136,7 +134,7 @@ func SendQfile(devicename string, qfilename string) (int, error) {
 				if result.Success {
 					qf.Set("returned", strconv.Itoa(SEND_DONE))
 					returned = SEND_DONE
-					logger.Logger.Printf("%v Success: %v, Hangup Cause: %v, Result: %v", faxjob.UUID, result.Success, result.Hangupcause, result.ResultText)
+					sessionlog.Log(fmt.Sprintf("Success: %v, Hangup Cause: %v, Result: %v", result.Success, result.Hangupcause, result.ResultText))
 				}
 			} else {
 				// Negotiation finished
@@ -164,12 +162,23 @@ func SendQfile(devicename string, qfilename string) (int, error) {
 		}
 
 		if err = qf.Write(); err != nil {
-			logger.Logger.Printf("%v Error updating qfile %v", faxjob.UUID, qf.filename)
+			sessionlog.Log("%v Error updating qfile %v", faxjob.UUID, qf.filename)
 		}
 
 		if done {
 			break
 		}
+	}
+
+	xfl := gofaxlib.NewXFRecord(result)
+	xfl.Modem = *device_id
+	xfl.Jobid = uint(jobid)
+	xfl.Jobtag = qf.GetFirst("jobtag")
+	xfl.Sender = qf.GetFirst("mailaddr")
+	xfl.Destnum = faxjob.Number
+	xfl.Owner = qf.GetFirst("owner")
+	if err = xfl.SaveTransmissionReport(); err != nil {
+		sessionlog.Log(err)
 	}
 
 	return returned, faxerr

@@ -7,6 +7,7 @@ import (
 	"github.com/fiorix/go-eventsocket/eventsocket"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type Resolution struct {
@@ -38,6 +39,7 @@ func parseResolution(resstr string) (*Resolution, error) {
 }
 
 type PageResult struct {
+	Ts               time.Time
 	Page             uint
 	BadRows          uint
 	LongestBadRowRun uint
@@ -54,11 +56,12 @@ func (p PageResult) String() string {
 		p.ImagePixelSize, p.EncodingName, p.ImageSize, p.BadRows)
 }
 
-type logfunc func(...interface{})
-
 type FaxResult struct {
-	uuid    uuid.UUID
-	logfunc logfunc
+	uuid       uuid.UUID
+	sessionlog SessionLogger
+
+	StartTs time.Time
+	EndTs   time.Time
 
 	Hangupcause string
 
@@ -74,10 +77,10 @@ type FaxResult struct {
 	PageResults []PageResult
 }
 
-func NewFaxResult(uuid uuid.UUID, logfunc logfunc) *FaxResult {
+func NewFaxResult(uuid uuid.UUID, sessionlog SessionLogger) *FaxResult {
 	f := &FaxResult{
-		uuid:    uuid,
-		logfunc: logfunc,
+		uuid:       uuid,
+		sessionlog: sessionlog,
 	}
 	return f
 }
@@ -87,8 +90,12 @@ func (f *FaxResult) AddEvent(ev *eventsocket.Event) {
 	case "CHANNEL_CALLSTATE":
 		// Call state has changed
 		callstate := ev.Get("Channel-Call-State")
-		f.logfunc("Call state change:", callstate)
+		f.sessionlog.Log("Call state change:", callstate)
+		if callstate == "ACTIVE" {
+			f.StartTs = time.Now()
+		}
 		if callstate == "HANGUP" {
+			f.EndTs = time.Now()
 			f.Hangupcause = ev.Get("Hangup-Cause")
 		}
 
@@ -106,7 +113,7 @@ func (f *FaxResult) AddEvent(ev *eventsocket.Event) {
 			if rate, err := strconv.ParseUint(ev.Get("Fax-Transfer-Rate"), 10, 0); err == nil {
 				f.TransferRate = uint(rate)
 			}
-			f.logfunc(fmt.Sprintf("Remote ID: \"%v\", Transfer Rate: %v, ECM=%v", f.RemoteID, f.TransferRate, f.Ecm))
+			f.sessionlog.Log(fmt.Sprintf("Remote ID: \"%v\", Transfer Rate: %v, ECM=%v", f.RemoteID, f.TransferRate, f.Ecm))
 
 		case "spandsp::rxfaxpageresult":
 			action = "received"
@@ -147,7 +154,7 @@ func (f *FaxResult) AddEvent(ev *eventsocket.Event) {
 			}
 
 			f.PageResults = append(f.PageResults, *pr)
-			f.logfunc(fmt.Sprintf("Page %d %v: %v", f.TransferredPages, action, *pr))
+			f.sessionlog.Log(fmt.Sprintf("Page %d %v: %v", f.TransferredPages, action, *pr))
 
 		case "spandsp::rxfaxresult":
 			fallthrough
