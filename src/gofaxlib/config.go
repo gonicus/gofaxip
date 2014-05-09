@@ -35,7 +35,6 @@ type config struct {
 		Ident    string
 		Header   string
 		Verbose  bool
-		Cidname  string
 	}
 	Hylafax struct {
 		Spooldir   string

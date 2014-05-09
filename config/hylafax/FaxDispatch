@@ -9,6 +9,6 @@
 # $CALLID3 -> Recipent (SIP To-User)
 #
 
-SENDTO=lindenberg@gonicus.de
+SENDTO=someone@example.com
 NOTIFY_FAXMASTER=never
 FILETYPE=pdf
