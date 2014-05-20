@@ -104,13 +104,14 @@ func (e *EventSocketServer) handler(c *eventsocket.Connection) {
 	logger.Logger.Printf("Incoming call to %v from %v <%v>", recipient, cidname, cidnum)
 
 	var device *Device
-	if gofaxlib.Config.Gofaxd.AllocateOutboundDevices {
+	if gofaxlib.Config.Gofaxd.AllocateInboundDevices {
 		// Find free device
 		device, err := devmanager.FindDevice(fmt.Sprintf("Receiving facsimile"))
 		if err != nil {
 			logger.Logger.Println(err)
 			c.Execute("respond", "404", true)
 			c.Send("exit")
+			return
 		}
 		defer device.SetReady()
 	}

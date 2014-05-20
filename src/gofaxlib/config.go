@@ -42,12 +42,12 @@ type config struct {
 		Xferfaxlog string
 	}
 	Gofaxd struct {
-		Socket                  string
-		Answerafter             uint64
-		Waittime                uint64
-		FaxRcvdCmd              string
-		DynamicConfig           string
-		AllocateOutboundDevices bool
+		Socket                 string
+		Answerafter            uint64
+		Waittime               uint64
+		FaxRcvdCmd             string
+		DynamicConfig          string
+		AllocateInboundDevices bool
 	}
 }
 
