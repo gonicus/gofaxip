@@ -1,6 +1,6 @@
 # GOfax.IP
 
-GOfax.IP is a Hylafax backend/connector providing Fax over IP support for HylaFAX using FreeSWITCH and SpanDSP through FreeSWITCH's mod_spandsp.
+GOfax.IP is a HylaFAX backend/connector providing Fax over IP support for HylaFAX using FreeSWITCH and SpanDSP through FreeSWITCH's mod_spandsp.
 
 In contrast to solutions like t38modem, iaxmodem and mod_spandsp's softmodem feature, GOfax.IP does not emulate fax modem devices but replaces HylaFAX's `faxgetty` and `faxsend` processes to communicate directly with FreeSWITCH using FreeSWITCH's Event Socket interface.
 
@@ -15,7 +15,7 @@ GOfax.IP is designed to provide a standalone fax server together with HylaFAX an
 * Support for an arbitrary number of lines (depending on the used hardware)
 * Extensive logging and reporting: Writing `xferfaxlog` for sent/received faxes; Writing session log files for all sent/received faxes
 * Support for modem status reporting/querying using HylaFAX native tools and clients: `faxstat` etc.
-* Call screening using HylaFax' `DynamicConfig`
+* Call screening using HylaFAX' `DynamicConfig`
 
 ## Components
 
@@ -25,7 +25,15 @@ GOfax.IP consists of two commands that replace their native HylaFAX conterparts
 
 ## Building
 
-GOfax.IP is implemented in Go/golang. It was developed and tested with go go version go1.2.1. As GO binaries are (almost) statically linked, they can be built on any system and just placed on the target system.  
+GOfax.IP is implemented in Go/golang. It was developed and tested with Go version 1.2.1. As Go binaries are (almost) statically linked, they can be built on any system and just placed on the target system.  
+
+### Using Makefile
+
+A simple `Makefile` is included that will set up `GOPATH` and embed the current HEAD's short commit hash into the version printed when running `gofaxd -version` or `gofaxsend -version`. Provided that the Go compiler is installed and the `go` command is executable, build by just typing `make` in the repository's root. 
+
+### Building manually
+
+Alternatively, GOfax.IP can be built manually using `go`:
 
 ```
 export GOPATH=$(pwd)
@@ -116,7 +124,7 @@ To have `faxstat` show modem/channel usage in it's status output, a modem config
 If `/etc/gofax.conf` is configured to manage 5 (virtual) modems, you have to create the (empty) configuration files manually:
 
 ```
-sudo touch /var/spool/hylafax/etc/config.freeswitch[0-4]
+sudo touch /var/spool/hylafax/etc/config.freeswitch{0..4}
 ```
 
 ## Operation
