@@ -161,7 +161,7 @@ func SendQfile(qfilename string) (int, error) {
 				}
 				qf.Set("status", negstatus)
 				tottries++
-				qf.Set("totdials", strconv.Itoa(tottries))
+				qf.Set("tottries", strconv.Itoa(tottries))
 				ndials = 0
 				qf.Set("ndials", strconv.Itoa(ndials))
 			}
