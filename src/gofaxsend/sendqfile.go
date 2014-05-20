@@ -187,15 +187,17 @@ func SendQfile(qfilename string) (int, error) {
 		}
 	}
 
-	xfl := gofaxlib.NewXFRecord(result)
-	xfl.Modem = *device_id
-	xfl.Jobid = uint(jobid)
-	xfl.Jobtag = qf.GetFirst("jobtag")
-	xfl.Sender = qf.GetFirst("mailaddr")
-	xfl.Destnum = faxjob.Number
-	xfl.Owner = qf.GetFirst("owner")
-	if err = xfl.SaveTransmissionReport(); err != nil {
-		sessionlog.Log(err)
+	if result != nil {
+		xfl := gofaxlib.NewXFRecord(result)
+		xfl.Modem = *device_id
+		xfl.Jobid = uint(jobid)
+		xfl.Jobtag = qf.GetFirst("jobtag")
+		xfl.Sender = qf.GetFirst("mailaddr")
+		xfl.Destnum = faxjob.Number
+		xfl.Owner = qf.GetFirst("owner")
+		if err = xfl.SaveTransmissionReport(); err != nil {
+			sessionlog.Log(err)
+		}
 	}
 
 	return returned, faxerr
