@@ -103,10 +103,29 @@ func (e *EventSocketServer) handler(c *eventsocket.Connection) {
 
 	logger.Logger.Printf("Incoming call to %v from %v <%v>", recipient, cidname, cidnum)
 
+	var device *Device
+	if gofaxlib.Config.Gofaxd.AllocateOutboundDevices {
+		// Find free device
+		device, err := devmanager.FindDevice(fmt.Sprintf("Receiving facsimile"))
+		if err != nil {
+			logger.Logger.Println(err)
+			c.Execute("respond", "404", true)
+			c.Send("exit")
+		}
+		defer device.SetReady()
+	}
+
+	var used_device string
+	if device != nil {
+		used_device = device.Name
+	} else {
+		used_device = DEFAULT_DEVICE
+	}
+
 	// Query DynamicConfig
 	if dc_cmd := gofaxlib.Config.Gofaxd.DynamicConfig; dc_cmd != "" {
 		logger.Logger.Println("Calling DynamicConfig script", dc_cmd)
-		dc, err := gofaxlib.DynamicConfig(dc_cmd, cidnum, cidname, recipient)
+		dc, err := gofaxlib.DynamicConfig(dc_cmd, used_device, cidnum, cidname, recipient)
 		if err != nil {
 			logger.Logger.Println("Error calling DynamicConfig:", err)
 		} else {
@@ -125,18 +144,6 @@ func (e *EventSocketServer) handler(c *eventsocket.Connection) {
 			}
 		}
 
-	}
-
-	var device *Device
-	if gofaxlib.Config.Gofaxd.AllocateOutboundDevices {
-		// Find free device
-		device, err := devmanager.FindDevice(fmt.Sprintf("Receiving facsimile"))
-		if err != nil {
-			logger.Logger.Println(err)
-			c.Execute("respond", "404", true)
-			c.Send("exit")
-		}
-		defer device.SetReady()
 	}
 
 	sessionlog, err := gofaxlib.NewSessionLogger()
@@ -234,13 +241,6 @@ EventLoop:
 		gofaxlib.Faxq.ReceiveStatus(device.Name, "D")
 	}
 	sessionlog.Log(fmt.Sprintf("Success: %v, Hangup Cause: %v, Result: %v", result.Success, result.Hangupcause, result.ResultText))
-
-	var used_device string
-	if device != nil {
-		used_device = device.Name
-	} else {
-		used_device = DEFAULT_DEVICE
-	}
 
 	xfl := gofaxlib.NewXFRecord(result)
 	xfl.Modem = used_device

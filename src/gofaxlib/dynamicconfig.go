@@ -53,12 +53,12 @@ func (h *HylaConfig) GetFirst(tag string) string {
 	return ""
 }
 
-func DynamicConfig(command string, cidnum string, cidname string, recipient string) (*HylaConfig, error) {
+func DynamicConfig(command string, device string, cidnum string, cidname string, recipient string) (*HylaConfig, error) {
 	if Config.Gofaxd.DynamicConfig == "" {
 		return nil, errors.New("No DynamicConfig command provided")
 	}
 
-	cmd := exec.Command(Config.Gofaxd.DynamicConfig, cidnum, cidname, recipient)
+	cmd := exec.Command(Config.Gofaxd.DynamicConfig, device, cidnum, cidname, recipient)
 	out, err := cmd.Output()
 	if err != nil {
 		return nil, err
