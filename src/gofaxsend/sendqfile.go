@@ -43,6 +43,7 @@ func SendQfile(qfilename string) (int, error) {
 	if err != nil {
 		return SEND_FAILED, errors.New(fmt.Sprintf("Cannot open qfile %v: %v", qfilename, err))
 	}
+	defer qf.Close()
 
 	var jobid uint64
 
@@ -122,7 +123,7 @@ func SendQfile(qfilename string) (int, error) {
 	totdials++
 	qf.Set("totdials", strconv.Itoa(totdials))
 	if err = qf.Write(); err != nil {
-		sessionlog.Log("%v Error updating qfile %v", faxjob.UUID, qf.filename)
+		sessionlog.Log("Error updating qfile:", err)
 	}
 
 	t := Transmit(*faxjob, sessionlog)
@@ -179,7 +180,7 @@ func SendQfile(qfilename string) (int, error) {
 		}
 
 		if err = qf.Write(); err != nil {
-			sessionlog.Log("%v Error updating qfile %v", faxjob.UUID, qf.filename)
+			sessionlog.Log("Error updating qfile:", err)
 		}
 
 		if done {
