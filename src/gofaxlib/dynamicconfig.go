@@ -44,7 +44,12 @@ type HylaConfig struct {
 	params []param
 }
 
+func NewHylaConfig() *HylaConfig {
+	return new(HylaConfig)
+}
+
 func (h *HylaConfig) GetFirst(tag string) string {
+	tag = strings.ToLower(tag)
 	for _, param := range h.params {
 		if param.Tag == tag {
 			return param.Value
@@ -53,18 +58,19 @@ func (h *HylaConfig) GetFirst(tag string) string {
 	return ""
 }
 
-func DynamicConfig(command string, device string, cidnum string, cidname string, recipient string) (*HylaConfig, error) {
-	if Config.Gofaxd.DynamicConfig == "" {
+func DynamicConfig(command string, args ...string) (*HylaConfig, error) {
+
+	if command == "" {
 		return nil, errors.New("No DynamicConfig command provided")
 	}
 
-	cmd := exec.Command(Config.Gofaxd.DynamicConfig, device, cidnum, cidname, recipient)
+	cmd := exec.Command(command, args...)
 	out, err := cmd.Output()
 	if err != nil {
 		return nil, err
 	}
 
-	h := new(HylaConfig)
+	h := NewHylaConfig()
 
 	scanner := bufio.NewScanner(bytes.NewBuffer(out))
 	for scanner.Scan() {
@@ -72,11 +78,24 @@ func DynamicConfig(command string, device string, cidnum string, cidname string,
 		if len(parts) != 2 {
 			continue
 		}
-		h.params = append(h.params, param{strings.TrimSpace(parts[0]), strings.TrimSpace(parts[1])})
+		h.params = append(h.params, param{strings.ToLower(strings.TrimSpace(parts[0])), strings.TrimSpace(parts[1])})
 	}
 	if err = scanner.Err(); err != nil {
 		return nil, err
 	}
 
 	return h, nil
+}
+
+func DynamicConfigBool(value string) (result bool) {
+	switch strings.ToLower(value) {
+	case "true":
+		fallthrough
+	case "1":
+		fallthrough
+	case "yes":
+		result = true
+	}
+
+	return
 }

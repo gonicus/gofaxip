@@ -49,6 +49,10 @@ type config struct {
 		DynamicConfig          string
 		AllocateInboundDevices bool
 	}
+	Gofaxsend struct {
+		FaxNumber     string
+		DynamicConfig string
+	}
 }
 
 func LoadConfig(filename string) {

@@ -57,7 +57,7 @@ func SendQfile(qfilename string) (int, error) {
 	faxjob := NewFaxJob()
 
 	faxjob.Number = qf.GetFirst("number")
-	faxjob.Cidnum = qf.GetFirst("faxnumber")
+	faxjob.Cidnum = gofaxlib.Config.Gofaxsend.FaxNumber //qf.GetFirst("faxnumber")
 	faxjob.Cidname = qf.GetFirst("sender")
 	faxjob.Ident = gofaxlib.Config.Freeswitch.Ident
 	faxjob.Header = gofaxlib.Config.Freeswitch.Header
@@ -68,6 +68,49 @@ func SendQfile(qfilename string) (int, error) {
 		}
 	}
 
+	// Query DynamicConfig
+	if dc_cmd := gofaxlib.Config.Gofaxsend.DynamicConfig; dc_cmd != "" {
+		logger.Logger.Println("Calling DynamicConfig script", dc_cmd)
+		dc, err := gofaxlib.DynamicConfig(dc_cmd, *device_id, qf.GetFirst("owner"), faxjob.Number)
+		if err != nil {
+			errmsg := fmt.Sprintln("Error calling DynamicConfig:", err)
+			logger.Logger.Println(errmsg)
+			qf.Set("status", errmsg)
+			if err = qf.Write(); err != nil {
+				logger.Logger.Println("Error updating qfile:", err)
+			}
+			return SEND_FAILED, errors.New(errmsg)
+
+		} else {
+
+			// Check if call should be rejected
+			if gofaxlib.DynamicConfigBool(dc.GetFirst("RejectCall")) {
+				errmsg := "Transmission rejected by DynamicConfig"
+				logger.Logger.Println(errmsg)
+				qf.Set("status", errmsg)
+				if err = qf.Write(); err != nil {
+					logger.Logger.Println("Error updating qfile:", err)
+				}
+				return SEND_FAILED, errors.New(errmsg)
+			}
+
+			// Check if a custom identifier should be set
+			if dynamic_tsi := dc.GetFirst("LocalIdentifier"); dynamic_tsi != "" {
+				faxjob.Ident = dynamic_tsi
+			}
+
+			if tagline := dc.GetFirst("TagLine"); tagline != "" {
+				faxjob.Header = tagline
+			}
+
+			if faxnumber := dc.GetFirst("FAXNumber"); faxnumber != "" {
+				faxjob.Cidnum = faxnumber
+			}
+
+		}
+	}
+
+	// Start session
 	sessionlog, err := gofaxlib.NewSessionLogger()
 	if err != nil {
 		return SEND_FAILED, err

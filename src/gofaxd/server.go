@@ -26,7 +26,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strconv"
-	"strings"
 )
 
 const (
@@ -123,6 +122,8 @@ func (e *EventSocketServer) handler(c *eventsocket.Connection) {
 		used_device = DEFAULT_DEVICE
 	}
 
+	csi := gofaxlib.Config.Freeswitch.Ident
+
 	// Query DynamicConfig
 	if dc_cmd := gofaxlib.Config.Gofaxd.DynamicConfig; dc_cmd != "" {
 		logger.Logger.Println("Calling DynamicConfig script", dc_cmd)
@@ -130,21 +131,20 @@ func (e *EventSocketServer) handler(c *eventsocket.Connection) {
 		if err != nil {
 			logger.Logger.Println("Error calling DynamicConfig:", err)
 		} else {
-			if rejectval := dc.GetFirst("RejectCall"); rejectval != "" {
-				switch strings.ToLower(rejectval) {
-				case "true":
-					fallthrough
-				case "1":
-					fallthrough
-				case "yes":
-					logger.Logger.Println("DynamicConfig decided to reject this call")
-					c.Execute("respond", "404", true)
-					c.Send("exit")
-					return
-				}
+			// Check if call should be rejected
+			if gofaxlib.DynamicConfigBool(dc.GetFirst("RejectCall")) {
+				logger.Logger.Println("DynamicConfig decided to reject this call")
+				c.Execute("respond", "404", true)
+				c.Send("exit")
+				return
 			}
-		}
 
+			// Check if a custom identifier should be set
+			if dynamic_csi := dc.GetFirst("LocalIdentifier"); dynamic_csi != "" {
+				csi = dynamic_csi
+			}
+
+		}
 	}
 
 	sessionlog, err := gofaxlib.NewSessionLogger()
@@ -193,7 +193,7 @@ func (e *EventSocketServer) handler(c *eventsocket.Connection) {
 
 	c.Execute("set", "fax_enable_t38_request=true", true)
 	c.Execute("set", "fax_enable_t38=true", true)
-	c.Execute("set", fmt.Sprintf("fax_ident=%s", gofaxlib.Config.Freeswitch.Ident), true)
+	c.Execute("set", fmt.Sprintf("fax_ident=%s", csi), true)
 	c.Execute("rxfax", filename_abs, true)
 
 	result := gofaxlib.NewFaxResult(channel_uuid, sessionlog)

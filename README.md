@@ -140,3 +140,41 @@ sudo /etc/init.d/hylafax restart
 ### Logging 
 
 GOfax.IP logs everything it does to syslog. 
+
+## Advanced Features
+
+As the _virtual modems_ visible in HylaFAX are not tied to preconfigured lines but assigned dynamically, it is not feasible to assign static telephone numbers to individual modems. Instead, GOfax.IP can query a `DynamicConfig` script before trying to send outgoing faxes that works similar to the `DynamicConfig` feature in HylaFAX' `faxgetty`. Using the sender's user id (`owner`), it can be used to set the Callerid, TSI and Header for each individual outgoing fax. It is also possible to reject an outgoing fax.
+
+### DynamicConfig for incoming faxes
+
+`DynamicConfig` as used and documented in HylaFAX can be used by GOfax.IP. 
+One option per line can be set, comments are note allowed. 
+
+**Parameters**
+The following arguments are provided to the `DynamicConfig` script for incoming faxes:
+
+* Used modem name
+* Caller-ID number
+* Caller-ID name
+* Destination number (SIP To-User)
+
+**Supported options**
+* `RejectCall: true` will reject the call. Default is to allow the call
+* `LocalIdentifier: +1 234 567` will assign a CSI (Called Station Identifier) that will be used for this fax reception. The Default CSI can be set in `gofax.conf` in the `ident` parameter.
+
+### DynamicConfig for outgoing faxes
+
+**This is a special feature of GOfax.IP, a similar mechanism does not exist in traditional HylaFAX installations.**
+
+**Parameters**
+The following arguments are provided to the `DynamicConfig` script for outgoing faxes:
+
+* Used modem name
+* Owner (User ID as set `sendfax -o` or the `FAXUSER` environment variable, optinally verified by PAM)
+* Destination number
+
+**Supported options**
+* `RejectCall: true` will reject the outgoing fax. The fax will instantly fail and not be retried.
+* `LocalIdentifier: +1 234 567` will assign a TSI (Transmitting Station Identifier) for this call. The Default TSI can be set in `gofax.conf` in the `ident` parameter.
+* `TagLine: ACME` will assign a header string to be shown on the top of each page. This does not support format strings as used by HylaFAX; if defined a header string is always shown with the current timestamp and page number as set by SpanDSP.
+* `FAXNumber: 1337` will set the outgoing caller id number as used by FreeSWITCH when originating the call. 
