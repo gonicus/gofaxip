@@ -156,6 +156,22 @@ func (e *EventSocketServer) handler(c *eventsocket.Connection) {
 
 	logger.Logger.Println(channel_uuid, "Logging events for commid", sessionlog.CommId(), "to", sessionlog.Logfile())
 	sessionlog.Log("Inbound channel UUID: ", channel_uuid)
+
+	// Check if T.38 should be disabled
+	disable_t38 := gofaxlib.Config.Freeswitch.DisableT38
+	if disable_t38 {
+		sessionlog.Log("T.38 disabled by configuration")
+	} else {
+		disable_t38, err = gofaxlib.GetSoftmodemFallback(nil, cidnum)
+		if err != nil {
+			sessionlog.Log(err)
+			disable_t38 = false
+		}
+		if disable_t38 {
+			sessionlog.Log(fmt.Sprintf("Softmodem fallback active for caller %s, disabling T.38", cidnum))
+		}
+	}
+
 	sessionlog.Log(fmt.Sprintf("Accepting call to %v from %v <%v> with commid %v", recipient, cidname, cidnum, sessionlog.CommId()))
 
 	if device != nil {
@@ -191,8 +207,12 @@ func (e *EventSocketServer) handler(c *eventsocket.Connection) {
 
 	sessionlog.Log("Rxfax to", filename_abs)
 
-	c.Execute("set", "fax_enable_t38_request=true", true)
-	c.Execute("set", "fax_enable_t38=true", true)
+	if disable_t38 {
+		c.Execute("set", "fax_enable_t38=false", true)
+	} else {
+		c.Execute("set", "fax_enable_t38_request=true", true)
+		c.Execute("set", "fax_enable_t38=true", true)
+	}
 	c.Execute("set", fmt.Sprintf("fax_ident=%s", csi), true)
 	c.Execute("rxfax", filename_abs, true)
 
@@ -251,6 +271,36 @@ EventLoop:
 	xfl.Cidname = cidname
 	if err = xfl.SaveReceptionReport(); err != nil {
 		sessionlog.Log(err)
+	}
+
+	// If reception failed:
+	// Check if softmodem fallback should be enabled on the next call
+	if gofaxlib.Config.Freeswitch.SoftmodemFallback && !result.Success {
+		var activate_fallback bool
+
+		if result.NegotiateCount > 1 {
+			// Activate fallback if negotiation was repeated
+			sessionlog.Log(fmt.Sprintf("Fax failed with %d negotiations, enabling softmodem fallback for calls from/to %s.", result.NegotiateCount, cidnum))
+			activate_fallback = true
+		} else {
+			var badrows uint
+			for _, p := range result.PageResults {
+				badrows += p.BadRows
+			}
+			if badrows > 0 {
+				// Activate fallback if any bad rows were present
+				sessionlog.Log(fmt.Sprintf("Fax failed with %d bad rows in %d pages, enabling softmodem fallback for calls from/to %s.", badrows, result.TransferredPages, cidnum))
+				activate_fallback = true
+			}
+		}
+
+		if activate_fallback {
+			err = gofaxlib.SetSoftmodemFallback(nil, cidnum, true)
+			if err != nil {
+				sessionlog.Log(err)
+			}
+		}
+
 	}
 
 	// Process received file

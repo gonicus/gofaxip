@@ -29,12 +29,14 @@ var (
 
 type config struct {
 	Freeswitch struct {
-		Socket   string
-		Password string
-		Gateway  []string
-		Ident    string
-		Header   string
-		Verbose  bool
+		Socket            string
+		Password          string
+		Gateway           []string
+		Ident             string
+		Header            string
+		Verbose           bool
+		DisableT38        bool
+		SoftmodemFallback bool
 	}
 	Hylafax struct {
 		Spooldir   string

@@ -90,6 +90,7 @@ type FaxResult struct {
 	ResultText       string
 	Success          bool
 	TransferRate     uint
+	NegotiateCount   uint
 
 	PageResults []PageResult
 }
@@ -123,6 +124,7 @@ func (f *FaxResult) AddEvent(ev *eventsocket.Event) {
 		case "spandsp::rxfaxnegociateresult":
 			fallthrough
 		case "spandsp::txfaxnegociateresult":
+			f.NegotiateCount++
 			if ecm := ev.Get("Fax-Ecm-Used"); ecm == "on" {
 				f.Ecm = true
 			}

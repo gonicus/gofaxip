@@ -96,6 +96,21 @@ func (t *transmission) start() {
 		return
 	}
 
+	// Check if T.38 should be disabled
+	disable_t38 := gofaxlib.Config.Freeswitch.DisableT38
+	if disable_t38 {
+		t.sessionlog.Log("T.38 disabled by configuration")
+	} else {
+		disable_t38, err = gofaxlib.GetSoftmodemFallback(t.conn, t.faxjob.Number)
+		if err != nil {
+			t.sessionlog.Log(err)
+			disable_t38 = false
+		}
+		if disable_t38 {
+			t.sessionlog.Log(fmt.Sprintf("Softmodem fallback active for destination %s, disabling T.38", t.faxjob.Number))
+		}
+	}
+
 	// Assemble dialstring
 	ds_variables_map := map[string]string{
 		"ignore_early_media":           "true",
@@ -106,6 +121,12 @@ func (t *transmission) start() {
 		"fax_header":                   t.faxjob.Header,
 		"fax_use_ecm":                  strconv.FormatBool(t.faxjob.UseECM),
 		"fax_verbose":                  strconv.FormatBool(gofaxlib.Config.Freeswitch.Verbose),
+	}
+
+	if disable_t38 {
+		ds_variables_map["fax_enable_t38"] = "false"
+	} else {
+		ds_variables_map["fax_enable_t38"] = "true"
 	}
 
 	ds_variables_pairs := make([]string, len(ds_variables_map))
@@ -152,6 +173,37 @@ func (t *transmission) start() {
 		case ev := <-es.Events():
 			result.AddEvent(ev)
 			if result.Hangupcause != "" {
+
+				// If transmission failed:
+				// Check if softmodem fallback should be enabled on the next call
+				if gofaxlib.Config.Freeswitch.SoftmodemFallback && !result.Success {
+					var activate_fallback bool
+
+					if result.NegotiateCount > 1 {
+						// Activate fallback if negotiation was repeated
+						t.sessionlog.Log(fmt.Sprintf("Fax failed with %d negotiations, enabling softmodem fallback for calls from/to %s.", result.NegotiateCount, t.faxjob.Number))
+						activate_fallback = true
+					} else {
+						var badrows uint
+						for _, p := range result.PageResults {
+							badrows += p.BadRows
+						}
+						if badrows > 0 {
+							// Activate fallback if any bad rows were present
+							t.sessionlog.Log(fmt.Sprintf("Fax failed with %d bad rows in %d pages, enabling softmodem fallback for calls from/to %s.", badrows, result.TransferredPages, t.faxjob.Number))
+							activate_fallback = true
+						}
+					}
+
+					if activate_fallback {
+						err = gofaxlib.SetSoftmodemFallback(t.conn, t.faxjob.Number, true)
+						if err != nil {
+							t.sessionlog.Log(err)
+						}
+					}
+
+				}
+
 				t.resultChan <- result
 				return
 			}

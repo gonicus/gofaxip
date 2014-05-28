@@ -61,7 +61,7 @@ curl http://files.freeswitch.org/repo/deb/debian/freeswitch_archive_g0.pub | apt
 
 ```
 apt-get update
-apt-get install hylafax-server freeswitch freeswitch-mod-commands freeswitch-mod-dptools freeswitch-mod-event-socket freeswitch-mod-logfile freeswitch-mod-sofia freeswitch-mod-spandsp freeswitch-mod-timerfd freeswitch-mod-tone-stream freeswitch-sysvinit
+apt-get install hylafax-server freeswitch freeswitch-mod-commands freeswitch-mod-dptools freeswitch-mod-event-socket freeswitch-mod-logfile freeswitch-mod-sofia freeswitch-mod-spandsp freeswitch-mod-timerfd freeswitch-mod-tone-stream freeswitch-mod-db freeswitch-sysvinit
 ```
 
 It is recommended to run gofaxd using a process management system as it doesn't daemonize by itself. A configuration file for the supervisor process control system is provided in the GOfax.IP repository. To use it, the supervisor packae has to be installed:
@@ -178,3 +178,12 @@ The following arguments are provided to the `DynamicConfig` script for outgoing 
 * `LocalIdentifier: +1 234 567` will assign a TSI (Transmitting Station Identifier) for this call. The Default TSI can be set in `gofax.conf` in the `ident` parameter.
 * `TagLine: ACME` will assign a header string to be shown on the top of each page. This does not support format strings as used by HylaFAX; if defined a header string is always shown with the current timestamp and page number as set by SpanDSP.
 * `FAXNumber: 1337` will set the outgoing caller id number as used by FreeSWITCH when originating the call. 
+
+### Fallback from T.38 to SpanDSP softmodem
+
+In rare cases we noticed problems with certain remote stations that could not successfully negotiate with some T.38 Gateways we tested. In the case we observed, the remote tried to use T.4 1-D compression with ECM enabled. After disabling T.38 the fax was successfully received. 
+
+To work around this rare sort of problem and improve compatiblity, GOfax.IP can identify failed transmissions and dynamically disable T.38 for the affected remote station and have FreeSWITCH use SpanDSP's pure software fax implementation. The station is identified by caller id and saved in FreeSWITCH's `mod_db`.
+To enable this feature, set `softmodemfallback = false` in `gofax.conf`.
+
+Note that this will only affect all subsequent calls from/to the remote station, assuming that the remote station will retry a failed fax. Entries in the fallback list are persistant and will not be expired by GOfax.IP. It is possible however to manually expire entries. The used `<realm>/<key>/<value>` is `fallback/<callerid>/<unix_timestamp>`, with unix_timestamp being the time when the entry was added. See https://wiki.freeswitch.org/wiki/Mod_db for details. 
