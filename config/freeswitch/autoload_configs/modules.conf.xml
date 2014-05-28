@@ -12,6 +12,7 @@
     <load module="mod_timerfd"/>
 
     <load module="mod_tone_stream"/>
+    <load module="mod_db"/>
 
   </modules>
 </configuration>
