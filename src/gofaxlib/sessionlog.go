@@ -24,14 +24,16 @@ import (
 )
 
 const (
-	LOG_DIR         = "log"
-	COMMID_FORMAT   = "%08d"
-	LOG_FILE_FORMAT = "c%s"
+	logDir        = "log"
+	commIDFormat  = "%08d"
+	logFileFormat = "c%s"
 )
 
+// SessionLogger is a logger that logs messages both to
+// the processes log facility and a HylaFax session log file
 type SessionLogger interface {
 	CommSeq() uint64
-	CommId() string
+	CommID() string
 	Logfile() string
 
 	Log(v ...interface{})
@@ -44,14 +46,15 @@ type hylasessionlog struct {
 	logfile string
 }
 
+// NewSessionLogger assigns a CommID and opens a session log file
 func NewSessionLogger() (SessionLogger, error) {
 	// Fetch commid and log file name
-	commseq, err := GetSeqFor(LOG_DIR)
+	commseq, err := GetSeqFor(logDir)
 	if err != nil {
 		return nil, err
 	}
-	commid := fmt.Sprintf(COMMID_FORMAT, commseq)
-	logfile := filepath.Join(LOG_DIR, fmt.Sprintf(LOG_FILE_FORMAT, commid))
+	commid := fmt.Sprintf(commIDFormat, commseq)
+	logfile := filepath.Join(logDir, fmt.Sprintf(logFileFormat, commid))
 
 	l := &hylasessionlog{
 		commseq: commseq,
@@ -73,7 +76,7 @@ func (h *hylasessionlog) CommSeq() uint64 {
 	return h.commseq
 }
 
-func (h *hylasessionlog) CommId() string {
+func (h *hylasessionlog) CommID() string {
 	return h.commid
 }
 

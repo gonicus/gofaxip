@@ -27,15 +27,16 @@ import (
 )
 
 const (
-	STATE_READY = iota
-	STATE_BUSY
-	STATE_DOWN
-	STATE_LOCKED
+	stateReady = iota
+	stateBusy
+	stateDown
+	stateLocked
 
-	FIFO_PREFIX = "FIFO."
-	STATUS_DIR  = "status"
+	fifoPrefix = "FIFO."
+	statusDir  = "status"
 )
 
+// Device is a (virtual) modem
 type Device struct {
 	Name       string
 	fifoname   string
@@ -47,14 +48,15 @@ type Device struct {
 	errors   chan error
 }
 
+// NewDevice creates a new virtual modem
 func NewDevice(name string) (*Device, error) {
 	var err error
 
 	d := Device{
 		Name: name,
 
-		fifoname:   filepath.Join(gofaxlib.Config.Hylafax.Spooldir, FIFO_PREFIX+name),
-		statusfile: filepath.Join(gofaxlib.Config.Hylafax.Spooldir, STATUS_DIR, name),
+		fifoname:   filepath.Join(gofaxlib.Config.Hylafax.Spooldir, fifoPrefix+name),
+		statusfile: filepath.Join(gofaxlib.Config.Hylafax.Spooldir, statusDir, name),
 
 		stateSet: make(chan uint),
 		stateGet: make(chan uint),
@@ -77,7 +79,7 @@ func NewDevice(name string) (*Device, error) {
 		}
 	}
 
-	go d.stateLoop(STATE_READY)
+	go d.stateLoop(stateReady)
 
 	d.fifostream = gofaxlib.NewFifoStream(d.fifoname)
 	go d.fifoLoop()
@@ -133,9 +135,7 @@ func (d *Device) stateLoop(state uint) {
 	}
 }
 
-func (d *Device) handle(msg string) {
-}
-
+// WriteStatusFile writes given string to HylaFax's modem status file
 func (d *Device) WriteStatusFile(msg string) {
 	sfh, err := os.OpenFile(d.statusfile, os.O_RDWR|os.O_CREATE, 0666)
 	if err != nil {
@@ -163,21 +163,24 @@ func (d *Device) WriteStatusFile(msg string) {
 	}
 }
 
+// GetState returns the current state of the device.
 func (d *Device) GetState() uint {
 	return <-d.stateGet
 }
 
+// SetReady sets the device state to READY
 func (d *Device) SetReady() {
 	logger.Logger.Printf("Changing state of modem %v to READY", d.Name)
-	d.stateSet <- STATE_READY
+	d.stateSet <- stateReady
 	gofaxlib.Faxq.ModemStatus(d.Name, "N")
 	d.WriteStatusFile("Running and idle")
 	gofaxlib.Faxq.ModemStatusReady(d.Name)
 }
 
+// SetBusy sets the device state to BUSY
 func (d *Device) SetBusy(msg string, outbound bool) {
 	logger.Logger.Printf("Changing state of modem %v to BUSY", d.Name)
-	d.stateSet <- STATE_BUSY
+	d.stateSet <- stateBusy
 
 	if outbound {
 		gofaxlib.Faxq.ModemStatus(d.Name, "U")
@@ -191,15 +194,17 @@ func (d *Device) SetBusy(msg string, outbound bool) {
 	d.WriteStatusFile(msg)
 }
 
+// SetDown sets the device state to DOWN
 func (d *Device) SetDown() {
 	logger.Logger.Printf("Changing state of modem %v to DOWN", d.Name)
-	d.stateSet <- STATE_DOWN
+	d.stateSet <- stateDown
 	gofaxlib.Faxq.ModemStatus(d.Name, "D")
 	d.WriteStatusFile("Down")
 }
 
+// SetLocked sets the device state to LOCKED
 func (d *Device) SetLocked() {
 	logger.Logger.Printf("Changing state of modem %v to LOCKED", d.Name)
-	d.stateSet <- STATE_LOCKED
+	d.stateSet <- stateLocked
 	d.WriteStatusFile("Locked for sending")
 }

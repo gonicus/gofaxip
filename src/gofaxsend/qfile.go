@@ -27,8 +27,8 @@ import (
 )
 
 const (
-	// Access mode for newly created queue files.
-	NEW_QFILE_MODE = 0660
+	// NewQfileMode is the default access mode for created queue files
+	NewQfileMode = 0660
 )
 
 type param struct {
@@ -36,12 +36,14 @@ type param struct {
 	Value string
 }
 
+// Qfile is a HylaFAX queue file
 type Qfile struct {
 	filename string
 	qfh      *os.File
 	params   []param
 }
 
+// OpenQfile opens and parses a HylaFAX queue file
 func OpenQfile(filename string) (*Qfile, error) {
 	var err error
 
@@ -70,7 +72,7 @@ func OpenQfile(filename string) (*Qfile, error) {
 		parts := strings.SplitN(scanner.Text(), ":", 2)
 		if len(parts) != 2 {
 			qfh.Close()
-			return nil, errors.New(fmt.Sprintf("%s: Error parsing line %d", filename, line))
+			return nil, fmt.Errorf("%s: Error parsing line %d", filename, line)
 		}
 		q.params = append(q.params, param{strings.TrimSpace(parts[0]), strings.TrimSpace(parts[1])})
 		line++
@@ -83,10 +85,12 @@ func OpenQfile(filename string) (*Qfile, error) {
 	return q, nil
 }
 
+// Close closes an open queue file
 func (q *Qfile) Close() error {
 	return q.qfh.Close()
 }
 
+// Write re-writes an opened queue file
 func (q *Qfile) Write() error {
 	var err error
 
@@ -96,11 +100,11 @@ func (q *Qfile) Write() error {
 
 	var bytes int64
 	for _, param := range q.params {
-		if n, err := q.qfh.WriteString(fmt.Sprintf("%s:%s\n", param.Tag, param.Value)); err != nil {
+		var n int
+		if n, err = q.qfh.WriteString(fmt.Sprintf("%s:%s\n", param.Tag, param.Value)); err != nil {
 			return err
-		} else {
-			bytes = bytes + int64(n)
 		}
+		bytes = bytes + int64(n)
 	}
 
 	if err = q.qfh.Truncate(bytes); err != nil {
@@ -114,7 +118,7 @@ func (q *Qfile) Write() error {
 	return nil
 }
 
-// Return slice containting all values for
+// GetAll returns a slice containting all values for
 // given tag.
 func (q *Qfile) GetAll(tag string) []string {
 	var result []string
@@ -126,6 +130,7 @@ func (q *Qfile) GetAll(tag string) []string {
 	return result
 }
 
+// GetFirst returns the value of the first parameter with given tag.
 func (q *Qfile) GetFirst(tag string) string {
 	for _, param := range q.params {
 		if param.Tag == tag {
@@ -135,9 +140,9 @@ func (q *Qfile) GetFirst(tag string) string {
 	return ""
 }
 
-// Replace the value of the first found param
+// Set replaces the value of the first found param
 // with given value.
-// If the param does not exist, append it.
+// If the param does not exist, it is appended.
 func (q *Qfile) Set(tag string, value string) error {
 	for i, param := range q.params {
 		if param.Tag == tag {
@@ -148,7 +153,7 @@ func (q *Qfile) Set(tag string, value string) error {
 	return errors.New("Tag not found")
 }
 
-// Add a param with given tag and value. If the
+// Add adds a param with given tag and value. If the
 // tag already exists, a second one is added.
 func (q *Qfile) Add(tag string, value string) {
 	q.params = append(q.params, param{tag, value})

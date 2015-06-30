@@ -21,7 +21,7 @@ import (
 	"code.google.com/p/go-uuid/uuid"
 )
 
-// Fax job containing everything FreeSWITCH needs
+// FaxJob containing everything FreeSWITCH needs
 type FaxJob struct {
 	// FreeSWITCH Channel UUID (we generate this)
 	UUID uuid.UUID
@@ -43,6 +43,7 @@ type FaxJob struct {
 	Header string
 }
 
+// NewFaxJob initializes a new Fax Job with a random UUID
 func NewFaxJob() *FaxJob {
 	return &FaxJob{
 		UUID:   uuid.NewRandom(),

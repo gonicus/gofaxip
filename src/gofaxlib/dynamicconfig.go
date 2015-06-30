@@ -40,14 +40,12 @@ type param struct {
 	Value string
 }
 
+// HylaConfig holds a set of HylaFAX configuration parameters
 type HylaConfig struct {
 	params []param
 }
 
-func NewHylaConfig() *HylaConfig {
-	return new(HylaConfig)
-}
-
+// GetFirst returns the first Value found matching given Tag
 func (h *HylaConfig) GetFirst(tag string) string {
 	tag = strings.ToLower(tag)
 	for _, param := range h.params {
@@ -58,6 +56,7 @@ func (h *HylaConfig) GetFirst(tag string) string {
 	return ""
 }
 
+// DynamicConfig executes the given command and parses the output compatible to HylaFAX' DynamicConfig
 func DynamicConfig(command string, args ...string) (*HylaConfig, error) {
 
 	if command == "" {
@@ -70,7 +69,7 @@ func DynamicConfig(command string, args ...string) (*HylaConfig, error) {
 		return nil, err
 	}
 
-	h := NewHylaConfig()
+	h := &HylaConfig{}
 
 	scanner := bufio.NewScanner(bytes.NewBuffer(out))
 	for scanner.Scan() {
@@ -87,6 +86,7 @@ func DynamicConfig(command string, args ...string) (*HylaConfig, error) {
 	return h, nil
 }
 
+// DynamicConfigBool interprets a DynamicConfig string value as truth value
 func DynamicConfigBool(value string) (result bool) {
 	switch strings.ToLower(value) {
 	case "true":

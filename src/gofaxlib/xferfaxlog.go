@@ -24,10 +24,11 @@ import (
 
 const (
 	// 19 fields
-	XLOG_FORMAT = "%s\t%s\t%s\t%s\t%v\t%s\t%s\t\"%s\"\t\"%s\"\t%d\t%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t\"%s\""
-	TS_LAYOUT   = "01/02/06 15:04"
+	xLogFormat = "%s\t%s\t%s\t%s\t%v\t%s\t%s\t\"%s\"\t\"%s\"\t%d\t%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t\"%s\""
+	tsLayout   = "01/02/06 15:04"
 )
 
+// XFRecord holds all data for a HylaFAX xferfaxlog record
 type XFRecord struct {
 	Ts       time.Time
 	Commid   string
@@ -49,12 +50,13 @@ type XFRecord struct {
 	Dcs      string
 }
 
+// NewXFRecord creates a new xferfaxlog record for a FaxResult
 func NewXFRecord(result *FaxResult) *XFRecord {
 	duration := result.EndTs.Sub(result.StartTs)
 
 	r := &XFRecord{
 		Ts:       result.StartTs,
-		Commid:   result.sessionlog.CommId(),
+		Commid:   result.sessionlog.CommID(),
 		RemoteID: result.RemoteID,
 		Params:   EncodeParams(result.TransferRate, result.Ecm),
 		Pages:    result.TransferredPages,
@@ -70,34 +72,36 @@ func NewXFRecord(result *FaxResult) *XFRecord {
 	return r
 }
 
-func (r *XFRecord) FormatTransmissionReport() string {
-	return fmt.Sprintf(XLOG_FORMAT, r.Ts.Format(TS_LAYOUT), "SEND", r.Commid, r.Modem,
+func (r *XFRecord) formatTransmissionReport() string {
+	return fmt.Sprintf(xLogFormat, r.Ts.Format(tsLayout), "SEND", r.Commid, r.Modem,
 		r.Jobid, r.Jobtag, r.Sender, r.Destnum, r.RemoteID, r.Params, r.Pages,
-		FormatDuration(r.Jobtime), FormatDuration(r.Conntime), r.Reason, "", "", "", r.Owner, r.Dcs)
+		formatDuration(r.Jobtime), formatDuration(r.Conntime), r.Reason, "", "", "", r.Owner, r.Dcs)
 }
 
-func (r *XFRecord) FormatReceptionReport() string {
-	return fmt.Sprintf(XLOG_FORMAT, r.Ts.Format(TS_LAYOUT), "RECV", r.Commid, r.Modem,
+func (r *XFRecord) formatReceptionReport() string {
+	return fmt.Sprintf(xLogFormat, r.Ts.Format(tsLayout), "RECV", r.Commid, r.Modem,
 		r.Filename, "", "fax", r.Destnum, r.RemoteID, r.Params, r.Pages,
-		FormatDuration(r.Jobtime), FormatDuration(r.Conntime), r.Reason,
+		formatDuration(r.Jobtime), formatDuration(r.Conntime), r.Reason,
 		fmt.Sprintf("\"%s\"", r.Cidname), fmt.Sprintf("\"%s\"", r.Cidnum), "", "", r.Dcs)
 }
 
+// SaveTransmissionReport appends a transmisison record to the configured xferfaxlog file
 func (r *XFRecord) SaveTransmissionReport() error {
 	if Config.Hylafax.Xferfaxlog == "" {
 		return nil
 	}
-	return AppendTo(Config.Hylafax.Xferfaxlog, r.FormatTransmissionReport())
+	return AppendTo(Config.Hylafax.Xferfaxlog, r.formatTransmissionReport())
 }
 
+// SaveReceptionReport appends a reception record to the configured xferfaxlog file
 func (r *XFRecord) SaveReceptionReport() error {
 	if Config.Hylafax.Xferfaxlog == "" {
 		return nil
 	}
-	return AppendTo(Config.Hylafax.Xferfaxlog, r.FormatReceptionReport())
+	return AppendTo(Config.Hylafax.Xferfaxlog, r.formatReceptionReport())
 }
 
-func FormatDuration(d time.Duration) string {
+func formatDuration(d time.Duration) string {
 	s := uint(d.Seconds())
 
 	hours := s / (60 * 60)
@@ -107,7 +111,9 @@ func FormatDuration(d time.Duration) string {
 	return fmt.Sprintf("%02d:%02d:%02d", hours, minutes, seconds)
 }
 
-// This only encodes bitrate and ECM use right now
+// EncodeParams encodes given baud rate and ecm status to
+// the status byte used in HylaFAX's xferfaxlog.
+// This only encodes bitrate and ECM use right now.
 func EncodeParams(baudrate uint, ecm bool) uint {
 
 	var br uint

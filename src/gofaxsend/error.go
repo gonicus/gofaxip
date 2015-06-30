@@ -17,6 +17,7 @@
 
 package main
 
+// FaxError is a Error including information if a fax shoud be retried
 type FaxError interface {
 	error
 	Retry() bool
@@ -27,7 +28,8 @@ type faxError struct {
 	retry bool
 }
 
-func NewFaxError(msg string, retry bool) faxError {
+// NewFaxError creates a FaxError
+func NewFaxError(msg string, retry bool) FaxError {
 	return faxError{msg, retry}
 }
 

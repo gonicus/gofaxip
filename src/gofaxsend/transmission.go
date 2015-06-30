@@ -39,7 +39,7 @@ type transmission struct {
 	sessionlog gofaxlib.SessionLogger
 }
 
-func Transmit(faxjob FaxJob, sessionlog gofaxlib.SessionLogger) *transmission {
+func transmit(faxjob FaxJob, sessionlog gofaxlib.SessionLogger) *transmission {
 	t := &transmission{
 		faxjob:     faxjob,
 		pageChan:   make(chan *gofaxlib.PageResult),
@@ -97,22 +97,22 @@ func (t *transmission) start() {
 	}
 
 	// Check if T.38 should be disabled
-	disable_t38 := gofaxlib.Config.Freeswitch.DisableT38
-	if disable_t38 {
+	disableT38 := gofaxlib.Config.Freeswitch.DisableT38
+	if disableT38 {
 		t.sessionlog.Log("T.38 disabled by configuration")
 	} else {
-		disable_t38, err = gofaxlib.GetSoftmodemFallback(t.conn, t.faxjob.Number)
+		disableT38, err = gofaxlib.GetSoftmodemFallback(t.conn, t.faxjob.Number)
 		if err != nil {
 			t.sessionlog.Log(err)
-			disable_t38 = false
+			disableT38 = false
 		}
-		if disable_t38 {
+		if disableT38 {
 			t.sessionlog.Log(fmt.Sprintf("Softmodem fallback active for destination %s, disabling T.38", t.faxjob.Number))
 		}
 	}
 
 	// Assemble dialstring
-	ds_variables_map := map[string]string{
+	dsVariablesMap := map[string]string{
 		"ignore_early_media":           "true",
 		"origination_uuid":             t.faxjob.UUID.String(),
 		"origination_caller_id_number": t.faxjob.Cidnum,
@@ -123,28 +123,28 @@ func (t *transmission) start() {
 		"fax_verbose":                  strconv.FormatBool(gofaxlib.Config.Freeswitch.Verbose),
 	}
 
-	if disable_t38 {
-		ds_variables_map["fax_enable_t38"] = "false"
+	if disableT38 {
+		dsVariablesMap["fax_enable_t38"] = "false"
 	} else {
-		ds_variables_map["fax_enable_t38"] = "true"
+		dsVariablesMap["fax_enable_t38"] = "true"
 	}
 
-	ds_variables_pairs := make([]string, len(ds_variables_map))
+	dsVariablesPairs := make([]string, len(dsVariablesMap))
 	i := 0
-	for k, v := range ds_variables_map {
-		ds_variables_pairs[i] = fmt.Sprintf("%v='%v'", k, v)
+	for k, v := range dsVariablesMap {
+		dsVariablesPairs[i] = fmt.Sprintf("%v='%v'", k, v)
 		i++
 	}
-	ds_variables := strings.Join(ds_variables_pairs, ",")
+	dsVariables := strings.Join(dsVariablesPairs, ",")
 
 	// Try gateways in configured order
-	ds_gateways_strings := make([]string, len(gofaxlib.Config.Freeswitch.Gateway))
+	dsGatewaysStrings := make([]string, len(gofaxlib.Config.Freeswitch.Gateway))
 	for i, gw := range gofaxlib.Config.Freeswitch.Gateway {
-		ds_gateways_strings[i] = fmt.Sprintf("sofia/gateway/%v/%v", gw, t.faxjob.Number)
+		dsGatewaysStrings[i] = fmt.Sprintf("sofia/gateway/%v/%v", gw, t.faxjob.Number)
 	}
-	ds_gateways := strings.Join(ds_gateways_strings, "|")
+	dsGateways := strings.Join(dsGatewaysStrings, "|")
 
-	dialstring := fmt.Sprintf("{%v}%v", ds_variables, ds_gateways)
+	dialstring := fmt.Sprintf("{%v}%v", dsVariables, dsGateways)
 	//t.sessionlog.Log(fmt.Sprintf("%v Dialstring: %v", faxjob.UUID, dialstring))
 
 	// Originate call
@@ -177,12 +177,12 @@ func (t *transmission) start() {
 				// If transmission failed:
 				// Check if softmodem fallback should be enabled on the next call
 				if gofaxlib.Config.Freeswitch.SoftmodemFallback && !result.Success {
-					var activate_fallback bool
+					var activateFallback bool
 
 					if result.NegotiateCount > 1 {
 						// Activate fallback if negotiation was repeated
 						t.sessionlog.Log(fmt.Sprintf("Fax failed with %d negotiations, enabling softmodem fallback for calls from/to %s.", result.NegotiateCount, t.faxjob.Number))
-						activate_fallback = true
+						activateFallback = true
 					} else {
 						var badrows uint
 						for _, p := range result.PageResults {
@@ -191,11 +191,11 @@ func (t *transmission) start() {
 						if badrows > 0 {
 							// Activate fallback if any bad rows were present
 							t.sessionlog.Log(fmt.Sprintf("Fax failed with %d bad rows in %d pages, enabling softmodem fallback for calls from/to %s.", badrows, result.TransferredPages, t.faxjob.Number))
-							activate_fallback = true
+							activateFallback = true
 						}
 					}
 
-					if activate_fallback {
+					if activateFallback {
 						err = gofaxlib.SetSoftmodemFallback(t.conn, t.faxjob.Number, true)
 						if err != nil {
 							t.sessionlog.Log(err)

@@ -29,19 +29,20 @@ import (
 
 const (
 	// Status codes from Hylafax.
-	SEND_RETRY = iota
-	SEND_FAILED
-	SEND_DONE
-	SEND_REFORMAT
+	sendRetry = iota
+	sendFailed
+	sendDone
+	sendReformat
 )
 
+// SendQfile immediately tries to send the given qfile using FreeSWITCH
 func SendQfile(qfilename string) (int, error) {
 	var err error
 
 	// Open qfile
 	qf, err := OpenQfile(qfilename)
 	if err != nil {
-		return SEND_FAILED, errors.New(fmt.Sprintf("Cannot open qfile %v: %v", qfilename, err))
+		return sendFailed, fmt.Errorf("Cannot open qfile %v: %v", qfilename, err)
 	}
 	defer qf.Close()
 
@@ -63,15 +64,15 @@ func SendQfile(qfilename string) (int, error) {
 	faxjob.Header = gofaxlib.Config.Freeswitch.Header
 
 	if desiredec := qf.GetFirst("desiredec"); desiredec != "" {
-		if ecm_mode, err := strconv.Atoi(desiredec); err == nil {
-			faxjob.UseECM = ecm_mode != 0
+		if ecmMode, err := strconv.Atoi(desiredec); err == nil {
+			faxjob.UseECM = ecmMode != 0
 		}
 	}
 
 	// Query DynamicConfig
-	if dc_cmd := gofaxlib.Config.Gofaxsend.DynamicConfig; dc_cmd != "" {
-		logger.Logger.Println("Calling DynamicConfig script", dc_cmd)
-		dc, err := gofaxlib.DynamicConfig(dc_cmd, *device_id, qf.GetFirst("owner"), faxjob.Number)
+	if dcCmd := gofaxlib.Config.Gofaxsend.DynamicConfig; dcCmd != "" {
+		logger.Logger.Println("Calling DynamicConfig script", dcCmd)
+		dc, err := gofaxlib.DynamicConfig(dcCmd, *deviceID, qf.GetFirst("owner"), faxjob.Number)
 		if err != nil {
 			errmsg := fmt.Sprintln("Error calling DynamicConfig:", err)
 			logger.Logger.Println(errmsg)
@@ -79,59 +80,58 @@ func SendQfile(qfilename string) (int, error) {
 			if err = qf.Write(); err != nil {
 				logger.Logger.Println("Error updating qfile:", err)
 			}
-			return SEND_FAILED, errors.New(errmsg)
-
-		} else {
-
-			// Check if call should be rejected
-			if gofaxlib.DynamicConfigBool(dc.GetFirst("RejectCall")) {
-				errmsg := "Transmission rejected by DynamicConfig"
-				logger.Logger.Println(errmsg)
-				qf.Set("status", errmsg)
-				if err = qf.Write(); err != nil {
-					logger.Logger.Println("Error updating qfile:", err)
-				}
-				return SEND_FAILED, errors.New(errmsg)
-			}
-
-			// Check if a custom identifier should be set
-			if dynamic_tsi := dc.GetFirst("LocalIdentifier"); dynamic_tsi != "" {
-				faxjob.Ident = dynamic_tsi
-			}
-
-			if tagline := dc.GetFirst("TagLine"); tagline != "" {
-				faxjob.Header = tagline
-			}
-
-			if faxnumber := dc.GetFirst("FAXNumber"); faxnumber != "" {
-				faxjob.Cidnum = faxnumber
-			}
+			return sendFailed, errors.New(errmsg)
 
 		}
+
+		// Check if call should be rejected
+		if gofaxlib.DynamicConfigBool(dc.GetFirst("RejectCall")) {
+			errmsg := "Transmission rejected by DynamicConfig"
+			logger.Logger.Println(errmsg)
+			qf.Set("status", errmsg)
+			if err = qf.Write(); err != nil {
+				logger.Logger.Println("Error updating qfile:", err)
+			}
+			return sendFailed, errors.New(errmsg)
+		}
+
+		// Check if a custom identifier should be set
+		if dynamicTsi := dc.GetFirst("LocalIdentifier"); dynamicTsi != "" {
+			faxjob.Ident = dynamicTsi
+		}
+
+		if tagline := dc.GetFirst("TagLine"); tagline != "" {
+			faxjob.Header = tagline
+		}
+
+		if faxnumber := dc.GetFirst("FAXNumber"); faxnumber != "" {
+			faxjob.Cidnum = faxnumber
+		}
+
 	}
 
 	// Start session
 	sessionlog, err := gofaxlib.NewSessionLogger()
 	if err != nil {
-		return SEND_FAILED, err
+		return sendFailed, err
 	}
 
-	qf.Set("commid", sessionlog.CommId())
+	qf.Set("commid", sessionlog.CommID())
 
-	logger.Logger.Println("Logging events for commid", sessionlog.CommId(), "to", sessionlog.Logfile())
+	logger.Logger.Println("Logging events for commid", sessionlog.CommID(), "to", sessionlog.Logfile())
 	sessionlog.Log(fmt.Sprintf("Processing HylaFAX Job %d as %v", jobid, faxjob.UUID))
 
 	// Add TIFFs from queue file
 	faxparts := qf.GetAll("fax")
 	if len(faxparts) == 0 {
-		return SEND_FAILED, errors.New("No fax file(s) found in qfile")
+		return sendFailed, errors.New("No fax file(s) found in qfile")
 	}
 
 	faxfile := FaxFile{}
 	for _, fileentry := range faxparts {
 		err := faxfile.AddItem(fileentry)
 		if err != nil {
-			return SEND_FAILED, err
+			return sendFailed, err
 		}
 	}
 
@@ -140,7 +140,7 @@ func SendQfile(qfilename string) (int, error) {
 	defer os.Remove(faxjob.Filename)
 
 	if err := faxfile.WriteTo(faxjob.Filename); err != nil {
-		return SEND_FAILED, err
+		return sendFailed, err
 	}
 
 	// Total attempted calls
@@ -169,11 +169,11 @@ func SendQfile(qfilename string) (int, error) {
 		sessionlog.Log("Error updating qfile:", err)
 	}
 
-	t := Transmit(*faxjob, sessionlog)
+	t := transmit(*faxjob, sessionlog)
 	var result *gofaxlib.FaxResult
 
 	// Wait for events
-	returned := SEND_RETRY
+	returned := sendRetry
 	done := false
 	var faxerr FaxError
 
@@ -193,8 +193,8 @@ func SendQfile(qfilename string) (int, error) {
 				done = true
 				qf.Set("status", result.ResultText)
 				if result.Success {
-					qf.Set("returned", strconv.Itoa(SEND_DONE))
-					returned = SEND_DONE
+					qf.Set("returned", strconv.Itoa(sendDone))
+					returned = sendDone
 					sessionlog.Log(fmt.Sprintf("Success: %v, Hangup Cause: %v, Result: %v", result.Success, result.Hangupcause, result.ResultText))
 				}
 			} else {
@@ -216,9 +216,9 @@ func SendQfile(qfilename string) (int, error) {
 			qf.Set("ndials", strconv.Itoa(ndials))
 			qf.Set("status", faxerr.Error())
 			if faxerr.Retry() {
-				returned = SEND_RETRY
+				returned = sendRetry
 			} else {
-				returned = SEND_FAILED
+				returned = sendFailed
 			}
 		}
 
@@ -233,7 +233,7 @@ func SendQfile(qfilename string) (int, error) {
 
 	if result != nil {
 		xfl := gofaxlib.NewXFRecord(result)
-		xfl.Modem = *device_id
+		xfl.Modem = *deviceID
 		xfl.Jobid = uint(jobid)
 		xfl.Jobtag = qf.GetFirst("jobtag")
 		xfl.Sender = qf.GetFirst("mailaddr")

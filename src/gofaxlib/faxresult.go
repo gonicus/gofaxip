@@ -27,6 +27,7 @@ import (
 	"time"
 )
 
+// Resolution is the image resolution of a fax
 type Resolution struct {
 	X uint
 	Y uint
@@ -55,6 +56,7 @@ func parseResolution(resstr string) (*Resolution, error) {
 	return res, nil
 }
 
+// PageResult is the result of a transmitted Fax page as reported by SpanDSP
 type PageResult struct {
 	Ts               time.Time
 	Page             uint
@@ -73,6 +75,7 @@ func (p PageResult) String() string {
 		p.ImagePixelSize, p.EncodingName, p.ImageSize, p.BadRows)
 }
 
+// FaxResult is the result of a completed or aborted Fax transmission
 type FaxResult struct {
 	uuid       uuid.UUID
 	sessionlog SessionLogger
@@ -95,6 +98,7 @@ type FaxResult struct {
 	PageResults []PageResult
 }
 
+// NewFaxResult creates a new FaxResult structure
 func NewFaxResult(uuid uuid.UUID, sessionlog SessionLogger) *FaxResult {
 	f := &FaxResult{
 		uuid:       uuid,
@@ -103,6 +107,7 @@ func NewFaxResult(uuid uuid.UUID, sessionlog SessionLogger) *FaxResult {
 	return f
 }
 
+// AddEvent parses a FreeSWITCH EventSocket event and merges contained information into the FaxResult
 func (f *FaxResult) AddEvent(ev *eventsocket.Event) {
 	switch ev.Get("Event-Name") {
 	case "CHANNEL_CALLSTATE":

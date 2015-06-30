@@ -21,6 +21,7 @@ import (
 	"os"
 )
 
+// SendFIFO sends a FIFO message to given FIFO file name
 func SendFIFO(filename string, msg string) error {
 	fifo, err := os.OpenFile(filename, os.O_WRONLY, 0)
 	if err != nil {

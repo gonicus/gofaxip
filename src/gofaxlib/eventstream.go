@@ -21,6 +21,8 @@ import (
 	"github.com/fiorix/go-eventsocket/eventsocket"
 )
 
+// EventStream is a stream of FreeSWITCH Event Socket events
+// provided through channels.
 type EventStream interface {
 	Events() <-chan *eventsocket.Event
 	Errors() <-chan error
@@ -33,6 +35,8 @@ type evs struct {
 	errors chan error
 }
 
+// NewEventStream creates a EventStream that continuously reads events
+// from a FreeSWITCH Event Socket connection into channes.
 func NewEventStream(conn *eventsocket.Connection) EventStream {
 	e := &evs{
 		conn:   conn,

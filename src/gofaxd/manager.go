@@ -26,7 +26,7 @@ type manager struct {
 	devices []*Device
 }
 
-func NewManager(nameprefix string, count uint) (*manager, error) {
+func newManager(nameprefix string, count uint) (*manager, error) {
 	var err error
 
 	m := &manager{
@@ -54,7 +54,7 @@ func (m *manager) SetAllDown() {
 
 func (m *manager) FindDevice(msg string) (*Device, error) {
 	for _, d := range m.devices {
-		if d.GetState() == STATE_READY {
+		if d.GetState() == stateReady {
 			d.SetBusy(msg, false)
 			return d, nil
 		}

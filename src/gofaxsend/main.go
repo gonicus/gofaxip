@@ -28,15 +28,15 @@ import (
 )
 
 const (
-	DEFAULT_CONFIGFILE = "/etc/gofax.conf"
-	PRODUCT_NAME       = "GOfax.IP"
-	FIFO_PREFIX        = "FIFO."
+	defaultConfigfile = "/etc/gofax.conf"
+	productName       = "GOfax.IP"
+	fifoPrefix        = "FIFO."
 )
 
 var (
-	config_file  = flag.String("c", DEFAULT_CONFIGFILE, "GOfax configuration file")
-	device_id    = flag.String("m", "", "Virtual modem device ID")
-	show_version = flag.Bool("version", false, "Show version information")
+	configFile  = flag.String("c", defaultConfigfile, "GOfax configuration file")
+	deviceID    = flag.String("m", "", "Virtual modem device ID")
+	showVersion = flag.Bool("version", false, "Show version information")
 
 	usage = fmt.Sprintf("Usage: %s -version | [-c configfile] -m deviceID qfile [qfile [qfile [...]]]", os.Args[0])
 
@@ -49,7 +49,7 @@ func init() {
 	if version == "" {
 		version = "development version"
 	}
-	version = fmt.Sprintf("%v %v", PRODUCT_NAME, version)
+	version = fmt.Sprintf("%v %v", productName, version)
 
 	flag.Usage = func() {
 		log.Printf("%s\n%s\n", version, usage)
@@ -60,22 +60,22 @@ func init() {
 func main() {
 	flag.Parse()
 
-	if *show_version {
+	if *showVersion {
 		fmt.Println(version)
 		os.Exit(1)
 	}
 
-	if *device_id == "" || !(flag.NArg() > 0) {
+	if *deviceID == "" || !(flag.NArg() > 0) {
 		logger.Logger.Print(usage)
 		log.Fatal(usage)
 	}
 
-	gofaxlib.LoadConfig(*config_file)
+	gofaxlib.LoadConfig(*configFile)
 
 	var err error
 	returned := 1 // Exit code
 
-	devicefifo := filepath.Join(gofaxlib.Config.Hylafax.Spooldir, FIFO_PREFIX+*device_id)
+	devicefifo := filepath.Join(gofaxlib.Config.Hylafax.Spooldir, fifoPrefix+*deviceID)
 	gofaxlib.SendFIFO(devicefifo, "SB")
 
 	for _, qfilename := range flag.Args() {

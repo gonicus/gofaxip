@@ -25,11 +25,12 @@ import (
 )
 
 const (
-	SEQ_FILE_NAME = "seqf"
+	seqFileName = "seqf"
 )
 
+// GetSeqFor increments and returns the sequence number for given HylaFAX spool area
 func GetSeqFor(subdir string) (seq uint64, err error) {
-	seqfname := filepath.Join(Config.Hylafax.Spooldir, subdir, SEQ_FILE_NAME)
+	seqfname := filepath.Join(Config.Hylafax.Spooldir, subdir, seqFileName)
 
 	seqf, err := os.OpenFile(seqfname, os.O_RDWR|os.O_CREATE, 0666)
 	if err != nil && !os.IsNotExist(err) {
@@ -45,7 +46,7 @@ func GetSeqFor(subdir string) (seq uint64, err error) {
 		return
 	}
 
-	seq += 1
+	seq++
 
 	if err = seqf.Truncate(0); err != nil {
 		return

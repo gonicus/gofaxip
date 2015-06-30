@@ -23,6 +23,7 @@ import (
 	"strings"
 )
 
+// FifoStream provides a channel of messages received on a FIFO
 type FifoStream interface {
 	Messages() <-chan string
 	Errors() <-chan error
@@ -34,6 +35,7 @@ type fifo struct {
 	errors   chan error
 }
 
+// NewFifoStream creates a FifoStream reading from a FIFO with given filename
 func NewFifoStream(name string) FifoStream {
 	f := &fifo{
 		name:     name,

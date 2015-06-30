@@ -27,11 +27,12 @@ const (
 	// No polling
 	// Class 2.0: (0,1),(0-5),(0-4),(0-2),(0-3),(0-3),(0),(0-7)
 	// http://www.hylafax.org/site2/setup-advanced.html
-	CAPABILITIES = "pcbffff01"
-	FAXQ_FIFO    = "FIFO"
+	capabilities = "pcbffff01"
+	faxqFifoName = "FIFO"
 )
 
 var (
+	// Faxq provides functionalty to send notification messages to faxq's FIFO
 	Faxq *faxqfifo
 )
 
@@ -52,7 +53,7 @@ func init() {
 }
 
 func (f *faxqfifo) getFilename() string {
-	return filepath.Join(Config.Hylafax.Spooldir, FAXQ_FIFO)
+	return filepath.Join(Config.Hylafax.Spooldir, faxqFifoName)
 }
 
 func (f *faxqfifo) messageLoop() {
@@ -82,7 +83,7 @@ func (f *faxqfifo) ModemStatus(modem string, msg string) error {
 }
 
 func (f *faxqfifo) ModemStatusReady(modem string) error {
-	return f.ModemStatus(modem, "R"+CAPABILITIES)
+	return f.ModemStatus(modem, "R"+capabilities)
 }
 
 func (f *faxqfifo) ReceiveStatus(modem string, msg string) error {

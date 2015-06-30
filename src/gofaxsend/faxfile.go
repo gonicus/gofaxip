@@ -40,13 +40,13 @@ type faxItem struct {
 	filename string
 }
 
-// A whole fax
+// FaxFile represents a whole fax optionally consisting of multiple documents
 type FaxFile struct {
 	items []faxItem
 }
 
-// Parse a fax entry from queue file and add
-// item to fax
+// AddItem parses a fax entry from queue file and adds
+// it to the fax
 func (f *FaxFile) AddItem(entry string) error {
 	parts := strings.SplitN(entry, ":", 3)
 	if len(parts) != 3 {
@@ -78,7 +78,7 @@ func (f *FaxFile) AddItem(entry string) error {
 	return nil
 }
 
-// Combine input items and write output to given
+// WriteTo combines input items and writes output to given
 // path using tiffcp
 func (f *FaxFile) WriteTo(outfile string) error {
 	if len(f.items) == 0 {

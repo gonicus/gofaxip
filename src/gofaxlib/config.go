@@ -24,6 +24,7 @@ import (
 )
 
 var (
+	// Config is the global configuration struct
 	Config config
 )
 
@@ -57,6 +58,7 @@ type config struct {
 	}
 }
 
+// LoadConfig loads the configuration from given file path
 func LoadConfig(filename string) {
 	err := gcfg.ReadFileInto(&Config, filename)
 	if err != nil {

@@ -30,14 +30,14 @@ import (
 )
 
 const (
-	DEFAULT_CONFIGFILE = "/etc/gofax.conf"
-	PRODUCT_NAME       = "GOfax.IP"
-	MODEM_PREFIX       = "freeswitch"
+	defaultConfigfile = "/etc/gofax.conf"
+	productName       = "GOfax.IP"
+	modemPrefix       = "freeswitch"
 )
 
 var (
-	config_file  = flag.String("c", DEFAULT_CONFIGFILE, "GOfax configuration file")
-	show_version = flag.Bool("version", false, "Show version information")
+	configFile  = flag.String("c", defaultConfigfile, "GOfax configuration file")
+	showVersion = flag.Bool("version", false, "Show version information")
 
 	usage = fmt.Sprintf("Usage: %s -version | [-c configfile]", os.Args[0])
 
@@ -54,7 +54,7 @@ func init() {
 	}
 
 	flag.Usage = func() {
-		log.Printf("%s %s\n%s\n", PRODUCT_NAME, version, usage)
+		log.Printf("%s %s\n%s\n", productName, version, usage)
 		flag.PrintDefaults()
 	}
 }
@@ -62,13 +62,13 @@ func init() {
 func main() {
 	flag.Parse()
 
-	if *show_version {
+	if *showVersion {
 		fmt.Println(version)
 		os.Exit(1)
 	}
 
-	logger.Logger.Printf("%v gofaxd %v starting", PRODUCT_NAME, version)
-	gofaxlib.LoadConfig(*config_file)
+	logger.Logger.Printf("%v gofaxd %v starting", productName, version)
+	gofaxlib.LoadConfig(*configFile)
 
 	if err := os.Chdir(gofaxlib.Config.Hylafax.Spooldir); err != nil {
 		logger.Logger.Print(err)
@@ -81,7 +81,7 @@ func main() {
 
 	// Start modem device manager
 	var err error
-	devmanager, err = NewManager(MODEM_PREFIX, gofaxlib.Config.Hylafax.Modems)
+	devmanager, err = newManager(modemPrefix, gofaxlib.Config.Hylafax.Modems)
 	if err != nil {
 		logger.Logger.Fatal(err)
 	}
