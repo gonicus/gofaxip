@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# Language / email template
+TEMPLATE=en
+
+# From address for all faxes / notifications
+FROMADDR=faxmaster@example.com
+
+# Recipient for faxmaster (administrative) notifications
+TOADDR=faxmaster@example.com
+NOTIFY_FAXMASTER=never
+
+# When to notify recipient / sender
+notify="always"
+
+# Override recipient
+mailaddr=$TOADDR

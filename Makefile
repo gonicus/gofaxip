@@ -15,3 +15,14 @@ bin/gofaxsend:
 
 clean:
 	rm -rf bin
+	rm -rf packages
+	rm -f gofaxbuild.id
+
+deb: iid := $(shell cat /proc/sys/kernel/random/uuid)
+deb:
+	docker build -t $(iid) -f Dockerfile.debbuilder .
+	docker run --cidfile=gofaxbuild.id $(iid)
+	docker cp `cat gofaxbuild.id`:/usr/src/build/packages .
+	docker rm `cat gofaxbuild.id`
+	docker rmi $(iid)
+	rm gofaxbuild.id

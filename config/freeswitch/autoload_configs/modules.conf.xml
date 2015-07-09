@@ -1,16 +1,14 @@
 <configuration name="modules.conf" description="Modules">
   <modules>
-    
+
+    <load module="mod_syslog"/>
     <load module="mod_logfile"/>
+
     <load module="mod_event_socket"/>
     <load module="mod_sofia"/>
-
     <load module="mod_commands"/>
     <load module="mod_dptools"/>
-
     <load module="mod_spandsp"/>
-    <load module="mod_timerfd"/>
-
     <load module="mod_tone_stream"/>
     <load module="mod_db"/>
 

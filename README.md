@@ -44,7 +44,7 @@ The resulting binaries `gofaxd` and `gofaxsend` are located in the `bin` directo
 
 ## Installation
 
-GOfax.IP was tested and developed on Debian 7 ("Wheezy"), so these instructions cover Debian in detail. Of course it is possible to install and use GOfax.IP on other Linux distributions and possibly other Unixes supported by golang, FreeSWITCH and HylaFAX.
+We recommend running GOfax.IP on Debian 8 ("Jessie"), so these instructions cover Debian in detail. Of course it is possible to install and use GOfax.IP on other Linux distributions and possibly other Unixes supported by golang, FreeSWITCH and HylaFAX.
 
 ### Dependencies
 
@@ -53,7 +53,7 @@ The official FreeSWITCH Debian repository can be used to obtain and install all 
 Adding the repository:
 
 ```
-echo 'deb http://files.freeswitch.org/repo/deb/debian/ wheezy main' >> /etc/apt/sources.list.d/freeswitch.list
+echo 'deb http://files.freeswitch.org/repo/deb/debian/ jessie main' >> /etc/apt/sources.list.d/freeswitch.list
 curl http://files.freeswitch.org/repo/deb/debian/freeswitch_archive_g0.pub | apt-key add -
 ```
 

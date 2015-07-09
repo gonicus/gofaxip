@@ -9,6 +9,18 @@
 # $CALLID3 -> Recipent (SIP To-User)
 #
 
-SENDTO=someone@example.com
+# Language / email template
+TEMPLATE=en
+
+# From address for all faxes / notifications
+FROMADDR=faxmaster@example.com
+
+# Recipient for faxmaster (administrative) notifications
+TOADDR=faxmaster@example.com
 NOTIFY_FAXMASTER=never
+
+# Recipient for incoming fax
+SENDTO=someone@example.com
+
+# Filetype for fax attachment
 FILETYPE=pdf

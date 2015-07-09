@@ -4,8 +4,11 @@
 		<param name="username" value="foo"/>
 		<param name="password" value="bar"/>
 
+		<param name="extension" value="auto_to_user"/>
 		<param name="caller-id-in-from" value="true"/>
-		<param name="extension-in-contact" value="true"/>
+
+		<!-- If you are having a problem with the default registering as gw+gateway_name@ip you can set this to true to use extension@ip -->
+		<param name="extension-in-contact" value="false"/>
 
 		<!-- uncomment to disable registering at the gateway -->
 		<!-- <param name="register" value="false"/> -->

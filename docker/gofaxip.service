@@ -1,0 +1,11 @@
+[Unit]
+Description=GOfax.IP Fax over IP Bridge
+After=network.target local-fs.target
+
+[Service]
+User=uucp
+ExecStart=/usr/bin/gofaxd
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

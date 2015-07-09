@@ -1,0 +1,17 @@
+[Unit]
+Description=FreeSWITCH VoIP Softswitch
+After=network.target local-fs.target
+
+[Service]
+User=uucp
+Group=uucp
+RuntimeDirectory=freeswitch
+PermissionsStartOnly=true
+ExecStartPre=/bin/chown -R uucp: /var/lib/freeswitch /var/log/freeswitch
+ExecStart=/usr/bin/freeswitch -nonat -nc -nf
+TimeoutSec=45s
+Restart=always
+IOSchedulingClass=realtime
+
+[Install]
+WantedBy=multi-user.target

@@ -30,8 +30,8 @@
 	    <param name="dtmf-duration" value="2000"/>
 	    <param name="codec-prefs" value="PCMA,PCMU"/>
 	    <param name="disable-hold" value="true"/>
-	    
-	    <param name="rtp-timer-name" value="timerfd"/>
+
+	    <param name="rtp-timer-name" value="soft"/>
 	    <param name="local-network-acl" value="localnet.auto"/>
 	    <param name="manage-presence" value="false"/>
 
