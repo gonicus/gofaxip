@@ -57,7 +57,7 @@ func SendQfile(qfilename string) (int, error) {
 	// Create FreeSWITCH Job
 	faxjob := NewFaxJob()
 
-	faxjob.Number = qf.GetFirst("number")
+	faxjob.Number = fmt.Sprint(gofaxlib.Config.Gofaxsend.CallPrefix, qf.GetFirst("number"))
 	faxjob.Cidnum = gofaxlib.Config.Gofaxsend.FaxNumber //qf.GetFirst("faxnumber")
 	faxjob.Cidname = qf.GetFirst("sender")
 	faxjob.Ident = gofaxlib.Config.Freeswitch.Ident
@@ -72,7 +72,7 @@ func SendQfile(qfilename string) (int, error) {
 	// Query DynamicConfig
 	if dcCmd := gofaxlib.Config.Gofaxsend.DynamicConfig; dcCmd != "" {
 		logger.Logger.Println("Calling DynamicConfig script", dcCmd)
-		dc, err := gofaxlib.DynamicConfig(dcCmd, *deviceID, qf.GetFirst("owner"), faxjob.Number)
+		dc, err := gofaxlib.DynamicConfig(dcCmd, *deviceID, qf.GetFirst("owner"), qf.GetFirst("number"))
 		if err != nil {
 			errmsg := fmt.Sprintln("Error calling DynamicConfig:", err)
 			logger.Logger.Println(errmsg)
@@ -237,7 +237,7 @@ func SendQfile(qfilename string) (int, error) {
 		xfl.Jobid = uint(jobid)
 		xfl.Jobtag = qf.GetFirst("jobtag")
 		xfl.Sender = qf.GetFirst("mailaddr")
-		xfl.Destnum = faxjob.Number
+		xfl.Destnum = qf.GetFirst("number")
 		xfl.Owner = qf.GetFirst("owner")
 		if err = xfl.SaveTransmissionReport(); err != nil {
 			sessionlog.Log(err)

@@ -54,6 +54,7 @@ type config struct {
 	}
 	Gofaxsend struct {
 		FaxNumber     string
+		CallPrefix    string
 		DynamicConfig string
 	}
 }
