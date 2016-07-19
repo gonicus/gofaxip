@@ -1,6 +1,6 @@
 GO=go
 VERSION=git-$(shell git rev-parse --short HEAD)
-LDFLAGS=-ldflags "-X main.version '$(VERSION)'"
+LDFLAGS=-ldflags "-X 'main.version=$(VERSION)'"
 
 GOPATH := $(shell pwd)
 export GOPATH
