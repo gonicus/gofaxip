@@ -44,8 +44,8 @@ The official FreeSWITCH Debian repository can be used to obtain and install all 
 Adding the repository:
 
 ```
-echo 'deb http://files.freeswitch.org/repo/deb/debian/ jessie main' >> /etc/apt/sources.list.d/freeswitch.list
 curl http://files.freeswitch.org/repo/deb/debian/freeswitch_archive_g0.pub | apt-key add -
+echo 'deb http://files.freeswitch.org/repo/deb/freeswitch-1.6/ jessie main' >> /etc/apt/sources.list.d/freeswitch.list
 ```
 
 ### Installing packages
