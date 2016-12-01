@@ -19,8 +19,9 @@ package gofaxlib
 
 import (
 	"fmt"
-	"gofaxlib/logger"
 	"path/filepath"
+
+	"github.com/gonicus/gofaxip/gofaxlib/logger"
 )
 
 const (

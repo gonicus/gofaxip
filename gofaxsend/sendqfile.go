@@ -20,11 +20,12 @@ package main
 import (
 	"errors"
 	"fmt"
-	"gofaxlib"
-	"gofaxlib/logger"
 	"os"
 	"path/filepath"
 	"strconv"
+
+	"github.com/gonicus/gofaxip/gofaxlib"
+	"github.com/gonicus/gofaxip/gofaxlib/logger"
 )
 
 const (

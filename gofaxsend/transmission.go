@@ -19,13 +19,15 @@ package main
 
 import (
 	"fmt"
-	"github.com/fiorix/go-eventsocket/eventsocket"
-	"gofaxlib"
 	"os"
 	"os/signal"
 	"strconv"
 	"strings"
 	"syscall"
+
+	"github.com/gonicus/gofaxip/gofaxlib"
+
+	"github.com/fiorix/go-eventsocket/eventsocket"
 )
 
 type transmission struct {

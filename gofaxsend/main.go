@@ -20,11 +20,12 @@ package main
 import (
 	"flag"
 	"fmt"
-	"gofaxlib"
-	"gofaxlib/logger"
 	"log"
 	"os"
 	"path/filepath"
+
+	"github.com/gonicus/gofaxip/gofaxlib"
+	"github.com/gonicus/gofaxip/gofaxlib/logger"
 )
 
 const (

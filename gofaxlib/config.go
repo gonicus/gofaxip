@@ -18,9 +18,11 @@
 package gofaxlib
 
 import (
-	"code.google.com/p/gcfg"
-	"gofaxlib/logger"
 	"log"
+
+	"github.com/gonicus/gofaxip/gofaxlib/logger"
+
+	"code.google.com/p/gcfg"
 )
 
 var (

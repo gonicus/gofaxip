@@ -1,0 +1,7 @@
+gofaxip (1.0-1) unstable; urgency=medium
+
+  * Implement proper Debian packaging
+  * Fix repository layout
+
+ -- Markus Lindenberg <lindenberg@gonicus.de>  Thu, 01 Dec 2016 10:42:23 +0100
+

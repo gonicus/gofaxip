@@ -19,11 +19,12 @@ package main
 
 import (
 	"errors"
-	"gofaxlib"
-	"gofaxlib/logger"
 	"os"
 	"path/filepath"
 	"syscall"
+
+	"github.com/gonicus/gofaxip/gofaxlib"
+	"github.com/gonicus/gofaxip/gofaxlib/logger"
 )
 
 const (

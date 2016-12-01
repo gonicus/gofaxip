@@ -1,0 +1,32 @@
+Source: gofaxip
+Section: net
+Priority: extra
+Maintainer: Markus Lindenberg <lindenberg@gonicus.de>
+Uploaders: Markus Lindenberg <lindenberg@gonicus.de>
+Build-Depends: debhelper (>= 9),
+               dh-golang,
+               golang-go,
+               dh-systemd (>= 1.5)
+Standards-Version: 3.9.7
+Homepage: https://github.com/gonicus/gofaxip
+XS-Go-Import-Path: github.com/gonicus/gofaxip
+
+Package: gofaxip
+Architecture: any
+Built-Using: ${misc:Built-Using}
+Depends: ${shlibs:Depends},
+         ${misc:Depends},
+         hylafax-server,
+         freeswitch,
+         freeswitch-mod-commands,
+         freeswitch-mod-dptools,
+         freeswitch-mod-event-socket,
+         freeswitch-mod-sofia,
+         freeswitch-mod-spandsp,
+         freeswitch-mod-tone-stream,
+         freeswitch-mod-db,
+         freeswitch-mod-syslog,
+         freeswitch-mod-logfile,
+Conflicts: freeswitch-sysvinit,
+           freeswitch-systemd
+Description: Fax Over IP backend for HylaFAX using FreeSWITCH

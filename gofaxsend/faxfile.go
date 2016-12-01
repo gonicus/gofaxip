@@ -20,12 +20,13 @@ package main
 import (
 	"errors"
 	"fmt"
-	"gofaxlib/logger"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/gonicus/gofaxip/gofaxlib/logger"
 )
 
 // One item (TIFF file) of a fax
