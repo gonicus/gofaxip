@@ -76,7 +76,7 @@ sudo systemctl daemon-reload
 A very minimal FreeSWITCH configuration for GOfax.IP is provided in the repository.
 
 ```
-sudo cp -r /usr/share/doc/gofaxip/examples/freeswitch /etc/freeswitch/
+sudo cp -r /usr/share/doc/gofaxip/examples/freeswitch/* /etc/freeswitch/
 ```
 
 The SIP gateway to use has to be configured in `/etc/freeswitch/gateways/default.xml`. It is possible to configure multiple gateways for GOfax.IP.
@@ -92,7 +92,7 @@ Currently GOfax.IP does not use HylaFAX configuration files *at all*. All config
 To make HylaFAX use `gofaxsend` for sending, the `SendFaxCmd` option has to be added to `/etc/hylafax/config`:
 
 ```
-SendFaxCmd:		"/usr/local/sbin/gofaxsend"
+SendFaxCmd:		"/usr/bin/gofaxsend"
 ```
 
 A sample `FaxDispatch` script is included in `config/hylafax/FaxDispatch`, the available `CALLID` values set by `gofaxd` are documented there. 
