@@ -95,7 +95,7 @@ To make HylaFAX use `gofaxsend` for sending, the `SendFaxCmd` option has to be a
 SendFaxCmd:		"/usr/bin/gofaxsend"
 ```
 
-A sample `FaxDispatch` script is included in `config/hylafax/FaxDispatch`, the available `CALLID` values set by `gofaxd` are documented there. 
+A sample `FaxDispatch` script is included in `/usr/share/doc/gofaxip/examples/hylafax/FaxDispatch`, the available `CALLID` values set by `gofaxd` are documented there.
 
 To have `faxstat` show modem/channel usage in it's status output, a modem configuration file has to exist. Note that GOfax.IP currently does not use HylaFAX' modem configuration files, so they can be empty, but they have to exist for `faxstat` to show the modem.
 
