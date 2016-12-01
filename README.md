@@ -25,22 +25,13 @@ GOfax.IP consists of two commands that replace their native HylaFAX conterparts
 
 ## Building
 
-GOfax.IP is implemented in Go/golang. It was developed and tested with Go version 1.2.1. As Go binaries are (almost) statically linked, they can be built on any system and just placed on the target system.  
-
-### Using Makefile
-
-A simple `Makefile` is included that will set up `GOPATH` and embed the current HEAD's short commit hash into the version printed when running `gofaxd -version` or `gofaxsend -version`. Provided that the Go compiler is installed and the `go` command is executable, build by just typing `make` in the repository's root. 
-
-### Building manually
-
-Alternatively, GOfax.IP can be built manually using `go`:
+GOfax.IP is implemented in [Go](https://golang.org/doc/install), it can be built using `go get`.
 
 ```
-export GOPATH=$(pwd)
-go install gofaxd gofaxsend
+go get github.com/gonicus/gofaxip/...
 ```
 
-The resulting binaries `gofaxd` and `gofaxsend` are located in the `bin` directory. 
+This will produce the binaries `gofaxd` and `gofaxsend`.
 
 ## Installation
 
@@ -61,23 +52,12 @@ curl http://files.freeswitch.org/repo/deb/debian/freeswitch_archive_g0.pub | apt
 
 ```
 apt-get update
-apt-get install hylafax-server freeswitch freeswitch-mod-commands freeswitch-mod-dptools freeswitch-mod-event-socket freeswitch-mod-logfile freeswitch-mod-sofia freeswitch-mod-spandsp freeswitch-mod-timerfd freeswitch-mod-tone-stream freeswitch-mod-db freeswitch-sysvinit
-```
-
-It is recommended to run gofaxd using a process management system as it doesn't daemonize by itself. A configuration file for the supervisor process control system is provided in the GOfax.IP repository. To use it, the supervisor packae has to be installed:
-
-```
-sudo apt-get install supervisor
-sudo cp config/supervisor/conf.d/gofaxd.conf /etc/supervisor/conf.d/
+apt-get install hylafax-server freeswitch freeswitch-mod-commands freeswitch-mod-dptools freeswitch-mod-event-socket freeswitch-mod-sofia freeswitch-mod-spandsp freeswitch-mod-tone-stream freeswitch-mod-db freeswitch-mod-syslog freeswitch-mod-logfile
 ```
 
 ### GOfax.IP
 
-We do not provide packages (yet), so for now the two binaries have to be installed manually. 
-
-```
-sudo cp bin/* /usr/local/sbin/
-```
+See [releases](https://github.com/gonicus/gofaxip/releases) for amd64 Debian packages.
 
 ## Configuration
 
@@ -88,13 +68,15 @@ FreeSWITCH has to be able to place received faxes in HylaFAX' `recvq` spool. The
 ```
 sudo chown -R uucp.uucp /var/log/freeswitch
 sudo chown -R uucp.uucp /var/lib/freeswitch
-sudo cp config/default/freeswitch /etc/default/
+sudo cp /usr/share/doc/gofaxip/examples/default/freeswitch /etc/default/
+sudo cp /usr/share/doc/gofaxip/examples/freeswitch.service /etc/systemd/system/
+sudo systemctl daemon-reload
 ```
 
 A very minimal FreeSWITCH configuration for GOfax.IP is provided in the repository.
 
 ```
-sudo cp -r config/freeswitch /etc/freeswitch/
+sudo cp -r /usr/share/doc/gofaxip/examples/freeswitch /etc/freeswitch/
 ```
 
 The SIP gateway to use has to be configured in `/etc/freeswitch/gateways/default.xml`. It is possible to configure multiple gateways for GOfax.IP.
@@ -103,11 +85,7 @@ The SIP gateway to use has to be configured in `/etc/freeswitch/gateways/default
 
 ### GOfax.IP
 
-Currently GOfax.IP does not use HylaFAX configuration files *at all*. All configuration for both `gofaxd` and `gofaxsend` is done in the INI-style configuration file `/etc/gofax.conf`. A sample config file is provided and has to be customized.
-
-```
-sudo cp config/gofax.conf /etc/
-```
+Currently GOfax.IP does not use HylaFAX configuration files *at all*. All configuration for both `gofaxd` and `gofaxsend` is done in the INI-style configuration file `/etc/gofax.conf` which has to be customized.
 
 ### HylaFAX
 
@@ -132,9 +110,9 @@ sudo touch /var/spool/hylafax/etc/config.freeswitch{0..4}
 ### Starting
 
 ```
-sudo /etc/init.d/freeswitch start
-sudo /etc/init.d/supervisor restart
-sudo /etc/init.d/hylafax restart
+sudo systemctl start freeswitch
+sudo systemctl start gofaxip
+sudo systemctl restart hylafax
 ```
 
 ### Logging 
