@@ -56,7 +56,10 @@ func SendQfile(qfilename string) (int, error) {
 	}
 
 	// Create FreeSWITCH Job
-	faxjob := NewFaxJob()
+	faxjob, err := NewFaxJob()
+	if err != nil {
+		return sendFailed, fmt.Errorf("Cannot create fax job: %s", err)
+	}
 
 	faxjob.Number = fmt.Sprint(gofaxlib.Config.Gofaxsend.CallPrefix, qf.GetFirst("number"))
 	faxjob.Cidnum = gofaxlib.Config.Gofaxsend.FaxNumber //qf.GetFirst("faxnumber")

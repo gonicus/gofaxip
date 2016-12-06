@@ -18,7 +18,7 @@
 package main
 
 import (
-	"code.google.com/p/go-uuid/uuid"
+	"github.com/google/uuid"
 )
 
 // FaxJob containing everything FreeSWITCH needs
@@ -44,9 +44,14 @@ type FaxJob struct {
 }
 
 // NewFaxJob initializes a new Fax Job with a random UUID
-func NewFaxJob() *FaxJob {
-	return &FaxJob{
-		UUID:   uuid.NewRandom(),
-		UseECM: true,
+func NewFaxJob() (*FaxJob, error) {
+	jobUUID, err := uuid.NewRandom()
+	if err != nil {
+		return nil, err
 	}
+
+	return &FaxJob{
+		UUID:   jobUUID,
+		UseECM: true,
+	}, nil
 }

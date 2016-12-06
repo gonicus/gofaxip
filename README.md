@@ -68,7 +68,6 @@ FreeSWITCH has to be able to place received faxes in HylaFAX' `recvq` spool. The
 ```
 sudo chown -R uucp.uucp /var/log/freeswitch
 sudo chown -R uucp.uucp /var/lib/freeswitch
-sudo cp /usr/share/doc/gofaxip/examples/default/freeswitch /etc/default/
 sudo cp /usr/share/doc/gofaxip/examples/freeswitch.service /etc/systemd/system/
 sudo systemctl daemon-reload
 ```

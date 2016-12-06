@@ -26,8 +26,8 @@ import (
 	"github.com/gonicus/gofaxip/gofaxlib"
 	"github.com/gonicus/gofaxip/gofaxlib/logger"
 
-	"code.google.com/p/go-uuid/uuid"
 	"github.com/fiorix/go-eventsocket/eventsocket"
+	"github.com/google/uuid"
 )
 
 const (
@@ -86,8 +86,8 @@ func (e *EventSocketServer) handler(c *eventsocket.Connection) {
 		return
 	}
 
-	channelUUID := uuid.Parse(connectev.Get("Unique-Id"))
-	if channelUUID == nil {
+	channelUUID, err := uuid.Parse(connectev.Get("Unique-Id"))
+	if err != nil {
 		c.Send("exit")
 		logger.Logger.Print(err)
 		return

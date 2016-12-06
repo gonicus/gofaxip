@@ -324,9 +324,9 @@ func capitalize(s string) string {
 // details.
 func (h *Connection) Send(command string) (*Event, error) {
 	// Sanity check to avoid breaking the parser
-	if strings.IndexAny(command, "\r\n") > 0 {
-		return nil, errInvalidCommand
-	}
+	//if strings.IndexAny(command, "\r\n") > 0 {
+	//	return nil, errInvalidCommand
+	//}
 	fmt.Fprintf(h.conn, "%s\r\n\r\n", command)
 	var (
 		ev  *Event

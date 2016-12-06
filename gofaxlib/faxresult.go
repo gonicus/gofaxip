@@ -18,13 +18,14 @@
 package gofaxlib
 
 import (
-	"code.google.com/p/go-uuid/uuid"
 	"errors"
 	"fmt"
-	"github.com/fiorix/go-eventsocket/eventsocket"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/fiorix/go-eventsocket/eventsocket"
+	"github.com/google/uuid"
 )
 
 // Resolution is the image resolution of a fax

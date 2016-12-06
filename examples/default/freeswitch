@@ -1,5 +1,0 @@
-# /etc/default/freeswitch
-DAEMON_OPTS="-rp -nonat"
-DAEMON_ARGS="-u uucp -g uucp -nc"
-USER=uucp
-GROUP=uucp
