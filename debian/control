@@ -16,6 +16,7 @@ Architecture: any
 Built-Using: ${misc:Built-Using}
 Depends: ${shlibs:Depends},
          ${misc:Depends},
+         libtiff-tools,
          hylafax-server,
          freeswitch,
          freeswitch-mod-commands,
