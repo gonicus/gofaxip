@@ -50,7 +50,8 @@ func SendQfile(qfilename string) (int, error) {
 
 	var jobid uint64
 
-	if jobidstr := qf.GetFirst("jobid"); jobidstr != "" {
+	jobidstr := qf.GetFirst("jobid")
+	if jobidstr != "" {
 		if jobid, err = strconv.ParseUint(jobidstr, 10, 0); err != nil {
 			logger.Logger.Println("Error parsing jobid")
 		}
@@ -78,7 +79,7 @@ func SendQfile(qfilename string) (int, error) {
 	// Query DynamicConfig
 	if dcCmd := gofaxlib.Config.Gofaxsend.DynamicConfig; dcCmd != "" {
 		logger.Logger.Println("Calling DynamicConfig script", dcCmd)
-		dc, err := gofaxlib.DynamicConfig(dcCmd, *deviceID, qf.GetFirst("owner"), qf.GetFirst("number"))
+		dc, err := gofaxlib.DynamicConfig(dcCmd, *deviceID, qf.GetFirst("owner"), qf.GetFirst("number"), jobidstr)
 		if err != nil {
 			errmsg := fmt.Sprintln("Error calling DynamicConfig:", err)
 			logger.Logger.Println(errmsg)

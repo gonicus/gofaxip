@@ -150,6 +150,7 @@ The following arguments are provided to the `DynamicConfig` script for outgoing 
 * Used modem name
 * Owner (User ID as set `sendfax -o` or the `FAXUSER` environment variable, optinally verified by PAM)
 * Destination number
+* Job ID
 
 **Supported options**
 * `RejectCall: true` will reject the outgoing fax. The fax will instantly fail and not be retried.
