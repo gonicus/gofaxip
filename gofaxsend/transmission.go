@@ -73,6 +73,11 @@ func (t *transmission) start() {
 		return
 	}
 
+	if len(t.faxjob.Gateways) == 0 {
+		t.errorChan <- NewFaxError("Gateway not set", false)
+		return
+	}
+
 	if _, err := os.Stat(t.faxjob.Filename); err != nil {
 		t.errorChan <- NewFaxError(err.Error(), false)
 		return
@@ -140,8 +145,8 @@ func (t *transmission) start() {
 	dsVariables := strings.Join(dsVariablesPairs, ",")
 
 	// Try gateways in configured order
-	dsGatewaysStrings := make([]string, len(gofaxlib.Config.Freeswitch.Gateway))
-	for i, gw := range gofaxlib.Config.Freeswitch.Gateway {
+	dsGatewaysStrings := make([]string, len(t.faxjob.Gateways))
+	for i, gw := range t.faxjob.Gateways {
 		dsGatewaysStrings[i] = fmt.Sprintf("sofia/gateway/%v/%v", gw, t.faxjob.Number)
 	}
 	dsGateways := strings.Join(dsGatewaysStrings, "|")
@@ -150,7 +155,7 @@ func (t *transmission) start() {
 	//t.sessionlog.Log(fmt.Sprintf("%v Dialstring: %v", faxjob.UUID, dialstring))
 
 	// Originate call
-	t.sessionlog.Log("Originating channel to", t.faxjob.Number)
+	t.sessionlog.Log("Originating channel to", t.faxjob.Number, "using gateway", strings.Join(t.faxjob.Gateways, ","))
 	_, err = t.conn.Send(fmt.Sprintf("api originate %v, &txfax(%v)", dialstring, t.faxjob.Filename))
 	if err != nil {
 		t.conn.Send(fmt.Sprintf("uuid_dump %v", t.faxjob.UUID))

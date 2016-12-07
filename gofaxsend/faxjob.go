@@ -41,6 +41,9 @@ type FaxJob struct {
 	// Page header with timestamp, header, ident, pageno will be added
 	// if this Header is non empty
 	Header string
+
+	// Gateways to try for this job
+	Gateways []string
 }
 
 // NewFaxJob initializes a new Fax Job with a random UUID

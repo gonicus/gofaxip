@@ -23,6 +23,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/gonicus/gofaxip/gofaxlib"
 	"github.com/gonicus/gofaxip/gofaxlib/logger"
@@ -66,6 +67,7 @@ func SendQfile(qfilename string) (int, error) {
 	faxjob.Cidname = qf.GetFirst("sender")
 	faxjob.Ident = gofaxlib.Config.Freeswitch.Ident
 	faxjob.Header = gofaxlib.Config.Freeswitch.Header
+	faxjob.Gateways = gofaxlib.Config.Freeswitch.Gateway
 
 	if desiredec := qf.GetFirst("desiredec"); desiredec != "" {
 		if ecmMode, err := strconv.Atoi(desiredec); err == nil {
@@ -110,6 +112,10 @@ func SendQfile(qfilename string) (int, error) {
 
 		if faxnumber := dc.GetFirst("FAXNumber"); faxnumber != "" {
 			faxjob.Cidnum = faxnumber
+		}
+
+		if gatewayString := dc.GetFirst("Gateway"); gatewayString != "" {
+			faxjob.Gateways = strings.Split(gatewayString, ",")
 		}
 
 	}
