@@ -7,6 +7,7 @@
 # $CALLID1 -> Callerid-Number
 # $CALLID2 -> Callerid-Name
 # $CALLID3 -> Recipent (SIP To-User)
+# $CALLID4 -> Gateway name
 #
 
 # Language / email template

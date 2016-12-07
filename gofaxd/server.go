@@ -79,7 +79,7 @@ func (e *EventSocketServer) Kill() {
 func (e *EventSocketServer) handler(c *eventsocket.Connection) {
 	logger.Logger.Println("Incoming Event Socket connection from", c.RemoteAddr())
 
-	connectev, err := c.Send("connect") // Returns: Ganzer Event mit alles
+	connectev, err := c.Send("connect") // Returns a whole event
 	if err != nil {
 		c.Send("exit")
 		logger.Logger.Print(err)
@@ -100,11 +100,12 @@ func (e *EventSocketServer) handler(c *eventsocket.Connection) {
 	c.Send("event plain CHANNEL_CALLSTATE CUSTOM spandsp::rxfaxnegociateresult spandsp::rxfaxpageresult spandsp::rxfaxresult")
 
 	// Extract Caller/Callee
+	gateway := connectev.Get("Variable_sip_gateway")
 	recipient := connectev.Get("Variable_sip_to_user")
 	cidname := connectev.Get("Channel-Caller-Id-Name")
 	cidnum := connectev.Get("Channel-Caller-Id-Number")
 
-	logger.Logger.Printf("Incoming call to %v from %v <%v>", recipient, cidname, cidnum)
+	logger.Logger.Printf("Incoming call to %v from %v <%v> via gateway %v", recipient, cidname, cidnum, gateway)
 
 	var device *Device
 	if gofaxlib.Config.Gofaxd.AllocateInboundDevices {
@@ -131,7 +132,7 @@ func (e *EventSocketServer) handler(c *eventsocket.Connection) {
 	// Query DynamicConfig
 	if dcCmd := gofaxlib.Config.Gofaxd.DynamicConfig; dcCmd != "" {
 		logger.Logger.Println("Calling DynamicConfig script", dcCmd)
-		dc, err := gofaxlib.DynamicConfig(dcCmd, usedDevice, cidnum, cidname, recipient)
+		dc, err := gofaxlib.DynamicConfig(dcCmd, usedDevice, cidnum, cidname, recipient, gateway)
 		if err != nil {
 			logger.Logger.Println("Error calling DynamicConfig:", err)
 		} else {
@@ -176,7 +177,7 @@ func (e *EventSocketServer) handler(c *eventsocket.Connection) {
 		}
 	}
 
-	sessionlog.Log(fmt.Sprintf("Accepting call to %v from %v <%v> with commid %v", recipient, cidname, cidnum, sessionlog.CommID()))
+	sessionlog.Log(fmt.Sprintf("Accepting call to %v from %v <%v> via gateway %v with commid %v", recipient, cidname, cidnum, gateway, sessionlog.CommID()))
 
 	if device != nil {
 		// Notify faxq
@@ -317,7 +318,7 @@ EventLoop:
 		errmsg = result.ResultText
 	}
 
-	cmd := exec.Command(rcvdcmd, filename, usedDevice, sessionlog.CommID(), errmsg, cidnum, cidname, recipient)
+	cmd := exec.Command(rcvdcmd, filename, usedDevice, sessionlog.CommID(), errmsg, cidnum, cidname, recipient, gateway)
 	sessionlog.Log("Calling", cmd.Path, cmd.Args)
 	if output, err := cmd.CombinedOutput(); err != nil {
 		sessionlog.Log(cmd.Path, "ended with", err)

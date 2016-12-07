@@ -133,7 +133,8 @@ The following arguments are provided to the `DynamicConfig` script for incoming 
 * Used modem name
 * Caller-ID number
 * Caller-ID name
-* Destination number (SIP To-User)
+* Destination (SIP To-User)
+* Gateway name
 
 **Supported options**
 * `RejectCall: true` will reject the call. Default is to allow the call
