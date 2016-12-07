@@ -101,7 +101,7 @@ func main() {
 		devmanager.SetAllDown()
 		time.Sleep(3 * time.Second)
 		logger.Logger.Print("Terminating")
-		os.Exit(1)
+		os.Exit(0)
 	}
 
 }
