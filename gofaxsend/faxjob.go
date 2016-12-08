@@ -35,6 +35,8 @@ type FaxJob struct {
 	Filename string
 	// Use ECM (default: true)
 	UseECM bool
+	// Disable V.17 and limit signal rate to 9600 (default: false)
+	DisableV17 bool
 	// Fax ident
 	Ident string
 	// String for header (i.e. sender company name)

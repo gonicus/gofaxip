@@ -127,6 +127,7 @@ func (t *transmission) start() {
 		"fax_ident":                    t.faxjob.Ident,
 		"fax_header":                   t.faxjob.Header,
 		"fax_use_ecm":                  strconv.FormatBool(t.faxjob.UseECM),
+		"fax_disable_v17":              strconv.FormatBool(t.faxjob.DisableV17),
 		"fax_verbose":                  strconv.FormatBool(gofaxlib.Config.Freeswitch.Verbose),
 	}
 

@@ -76,6 +76,14 @@ func SendQfile(qfilename string) (int, error) {
 		}
 	}
 
+	if desiredbr := qf.GetFirst("desiredbr"); desiredbr != "" {
+		if brMode, err := strconv.Atoi(desiredbr); err == nil {
+			if brMode < 5 { // < 14400bps
+				faxjob.DisableV17 = true
+			}
+		}
+	}
+
 	// Query DynamicConfig
 	if dcCmd := gofaxlib.Config.Gofaxsend.DynamicConfig; dcCmd != "" {
 		logger.Logger.Println("Calling DynamicConfig script", dcCmd)
