@@ -9,6 +9,14 @@
 # $CALLID3 -> Recipent (SIP To-User)
 # $CALLID4 -> Gateway name
 #
+# Extra environment set by gofaxd:
+# $HANGUPCAUSE   -> FreeSWITCH Hangup Cause (text)
+# $TRANSFER_RATE -> SpanDSP Transfer Rate (e.g. 9600 / 14400)
+
+# Use TRANSFER_RATE as SIGNALRATE for email templates
+# (SpanDSP doesn't fill the FaxRecvParams TIFF Tag,
+# so SIGNALRATE is 0 bit/s by default)
+SIGNALRATE="$TRANSFER_RATE bit/s"
 
 # Language / email template
 TEMPLATE=en

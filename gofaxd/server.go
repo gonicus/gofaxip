@@ -19,6 +19,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strconv"
@@ -319,6 +320,11 @@ EventLoop:
 	}
 
 	cmd := exec.Command(rcvdcmd, filename, usedDevice, sessionlog.CommID(), errmsg, cidnum, cidname, recipient, gateway)
+	extraEnv := []string{
+		fmt.Sprintf("HANGUPCAUSE=%s", result.Hangupcause),
+		fmt.Sprintf("TRANSFER_RATE=%d", result.TransferRate),
+	}
+	cmd.Env = append(os.Environ(), extraEnv...)
 	sessionlog.Log("Calling", cmd.Path, cmd.Args)
 	if output, err := cmd.CombinedOutput(); err != nil {
 		sessionlog.Log(cmd.Path, "ended with", err)
