@@ -1,0 +1,10 @@
+debian/debhelper-build-stamp
+debian/files
+debian/gofaxip.debhelper.log
+debian/gofaxip.postinst.debhelper
+debian/gofaxip.postrm.debhelper
+debian/gofaxip.prerm.debhelper
+debian/gofaxip.substvars
+debian/gofaxip/
+obj-x86_64-linux-gnu/
+

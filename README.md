@@ -33,6 +33,14 @@ go get github.com/gonicus/gofaxip/...
 
 This will produce the binaries `gofaxd` and `gofaxsend`.
 
+## Build debian package
+```
+git clone https://github.com/gonicus/gofaxip
+cd gofaxip
+apt install dh-golang dh-systemd git-buildpackage
+git-buildpackage
+```
+
 ## Installation
 
 We recommend running GOfax.IP on Debian 8 ("Jessie"), so these instructions cover Debian in detail. Of course it is possible to install and use GOfax.IP on other Linux distributions and possibly other Unixes supported by golang, FreeSWITCH and HylaFAX.
