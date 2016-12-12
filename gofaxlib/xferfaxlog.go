@@ -24,7 +24,7 @@ import (
 
 const (
 	// 19 fields
-	xLogFormat = "%s\t%s\t%s\t%s\t%v\t%s\t%s\t\"%s\"\t\"%s\"\t%d\t%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t\"%s\""
+	xLogFormat = "%s\t%s\t%s\t%s\t%v\t\"%s\"\t%s\t\"%s\"\t\"%s\"\t%d\t%d\t%s\t%s\t\"%s\"\t\"%s\"\t\"%s\"\t\"%s\"\t\"%s\"\t\"%s\""
 	tsLayout   = "01/02/06 15:04"
 )
 
