@@ -48,11 +48,13 @@ func SendQfile(qfilename string) (int, error) {
 	}
 	defer qf.Close()
 
-	var jobid uint64
+	var jobid uint
 
 	jobidstr := qf.GetFirst("jobid")
 	if jobidstr != "" {
-		if jobid, err = strconv.ParseUint(jobidstr, 10, 0); err != nil {
+		if i, err := strconv.Atoi(jobidstr); err == nil {
+			jobid = uint(i)
+		} else {
 			logger.Logger.Println("Error parsing jobid")
 		}
 	}
