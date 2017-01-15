@@ -174,11 +174,11 @@ func (e *EventSocketServer) handler(c *eventsocket.Connection) {
 			disableT38 = false
 		}
 		if disableT38 {
-			sessionlog.Log(fmt.Sprintf("Softmodem fallback active for caller %s, disabling T.38", cidnum))
+			sessionlog.Logf("Softmodem fallback active for caller %s, disabling T.38", cidnum)
 		}
 	}
 
-	sessionlog.Log(fmt.Sprintf("Accepting call to %v from %v <%v> via gateway %v with commid %v", recipient, cidname, cidnum, gateway, sessionlog.CommID()))
+	sessionlog.Logf("Accepting call to %v from %v <%v> via gateway %v with commid %v", recipient, cidname, cidnum, gateway, sessionlog.CommID())
 
 	if device != nil {
 		// Notify faxq
@@ -267,7 +267,7 @@ EventLoop:
 	if device != nil {
 		gofaxlib.Faxq.ReceiveStatus(device.Name, "D")
 	}
-	sessionlog.Log(fmt.Sprintf("Success: %v, Hangup Cause: %v, Result: %v", result.Success, result.Hangupcause, result.ResultText))
+	sessionlog.Logf("Success: %v, Hangup Cause: %v, Result: %v", result.Success, result.Hangupcause, result.ResultText)
 
 	xfl := gofaxlib.NewXFRecord(result)
 	xfl.Modem = usedDevice
@@ -286,7 +286,7 @@ EventLoop:
 
 		if result.NegotiateCount > 1 {
 			// Activate fallback if negotiation was repeated
-			sessionlog.Log(fmt.Sprintf("Fax failed with %d negotiations, enabling softmodem fallback for calls from/to %s.", result.NegotiateCount, cidnum))
+			sessionlog.Logf("Fax failed with %d negotiations, enabling softmodem fallback for calls from/to %s.", result.NegotiateCount, cidnum)
 			activateFallback = true
 		} else {
 			var badrows uint
@@ -295,7 +295,7 @@ EventLoop:
 			}
 			if badrows > 0 {
 				// Activate fallback if any bad rows were present
-				sessionlog.Log(fmt.Sprintf("Fax failed with %d bad rows in %d pages, enabling softmodem fallback for calls from/to %s.", badrows, result.TransferredPages, cidnum))
+				sessionlog.Logf("Fax failed with %d bad rows in %d pages, enabling softmodem fallback for calls from/to %s.", badrows, result.TransferredPages, cidnum)
 				activateFallback = true
 			}
 		}

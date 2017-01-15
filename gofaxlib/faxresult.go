@@ -138,7 +138,7 @@ func (f *FaxResult) AddEvent(ev *eventsocket.Event) {
 			if rate, err := strconv.Atoi(ev.Get("Fax-Transfer-Rate")); err == nil {
 				f.TransferRate = uint(rate)
 			}
-			f.sessionlog.Log(fmt.Sprintf("Remote ID: \"%v\", Transfer Rate: %v, ECM=%v", f.RemoteID, f.TransferRate, f.Ecm))
+			f.sessionlog.Logf("Remote ID: \"%v\", Transfer Rate: %v, ECM=%v", f.RemoteID, f.TransferRate, f.Ecm)
 
 		case "spandsp::rxfaxpageresult":
 			action = "received"
@@ -179,7 +179,7 @@ func (f *FaxResult) AddEvent(ev *eventsocket.Event) {
 			}
 
 			f.PageResults = append(f.PageResults, *pr)
-			f.sessionlog.Log(fmt.Sprintf("Page %d %v: %v", f.TransferredPages, action, *pr))
+			f.sessionlog.Logf("Page %d %v: %v", f.TransferredPages, action, *pr)
 
 		case "spandsp::rxfaxresult":
 			fallthrough

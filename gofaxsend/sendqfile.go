@@ -140,7 +140,7 @@ func SendQfile(qfilename string) (int, error) {
 	qf.Set("commid", sessionlog.CommID())
 
 	logger.Logger.Println("Logging events for commid", sessionlog.CommID(), "to", sessionlog.Logfile())
-	sessionlog.Log(fmt.Sprintf("Processing HylaFAX Job %d as %v", jobid, faxjob.UUID))
+	sessionlog.Logf("Processing HylaFAX Job %d as %v", jobid, faxjob.UUID)
 
 	// Add TIFFs from queue file
 	faxparts := qf.GetAll("fax")
@@ -216,7 +216,7 @@ func SendQfile(qfilename string) (int, error) {
 				if result.Success {
 					qf.Set("returned", strconv.Itoa(sendDone))
 					returned = sendDone
-					sessionlog.Log(fmt.Sprintf("Success: %v, Hangup Cause: %v, Result: %v", result.Success, result.Hangupcause, result.ResultText))
+					sessionlog.Logf("Success: %v, Hangup Cause: %v, Result: %v", result.Success, result.Hangupcause, result.ResultText)
 				}
 			} else {
 				// Negotiation finished
