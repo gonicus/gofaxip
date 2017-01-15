@@ -44,12 +44,12 @@ func parseResolution(resstr string) (*Resolution, error) {
 		return nil, errors.New("Error parsing resolution string")
 	}
 	res := new(Resolution)
-	if x, err := strconv.ParseUint(parts[0], 10, 0); err == nil {
+	if x, err := strconv.Atoi(parts[0]); err == nil {
 		res.X = uint(x)
 	} else {
 		return nil, err
 	}
-	if y, err := strconv.ParseUint(parts[1], 10, 0); err == nil {
+	if y, err := strconv.Atoi(parts[1]); err == nil {
 		res.Y = uint(y)
 	} else {
 		return nil, err
@@ -135,7 +135,7 @@ func (f *FaxResult) AddEvent(ev *eventsocket.Event) {
 				f.Ecm = true
 			}
 			f.RemoteID = ev.Get("Fax-Remote-Station-Id")
-			if rate, err := strconv.ParseUint(ev.Get("Fax-Transfer-Rate"), 10, 0); err == nil {
+			if rate, err := strconv.Atoi(ev.Get("Fax-Transfer-Rate")); err == nil {
 				f.TransferRate = uint(rate)
 			}
 			f.sessionlog.Log(fmt.Sprintf("Remote ID: \"%v\", Transfer Rate: %v, ECM=%v", f.RemoteID, f.TransferRate, f.Ecm))
@@ -148,14 +148,14 @@ func (f *FaxResult) AddEvent(ev *eventsocket.Event) {
 				action = "sent"
 			}
 			// A page was transferred
-			if pages, err := strconv.ParseUint(ev.Get("Fax-Document-Transferred-Pages"), 10, 0); err == nil {
+			if pages, err := strconv.Atoi(ev.Get("Fax-Document-Transferred-Pages")); err == nil {
 				f.TransferredPages = uint(pages)
 			}
 
 			pr := new(PageResult)
 			pr.Page = f.TransferredPages
 
-			if badrows, err := strconv.ParseUint(ev.Get("Fax-Bad-Rows"), 10, 0); err == nil {
+			if badrows, err := strconv.Atoi(ev.Get("Fax-Bad-Rows")); err == nil {
 				pr.BadRows = uint(badrows)
 			}
 			pr.EncodingName = ev.Get("Fax-Encoding-Name")
@@ -171,10 +171,10 @@ func (f *FaxResult) AddEvent(ev *eventsocket.Event) {
 			if fileres, err := parseResolution(ev.Get("Fax-File-Image-Resolution")); err == nil {
 				pr.FileResolution = *fileres
 			}
-			if size, err := strconv.ParseUint(ev.Get("Fax-Image-Size"), 10, 0); err == nil {
+			if size, err := strconv.Atoi(ev.Get("Fax-Image-Size")); err == nil {
 				pr.ImageSize = uint(size)
 			}
-			if badrowrun, err := strconv.ParseUint(ev.Get("Fax-Longest-Bad-Row-Run"), 10, 0); err == nil {
+			if badrowrun, err := strconv.Atoi(ev.Get("Fax-Longest-Bad-Row-Run")); err == nil {
 				pr.LongestBadRowRun = uint(badrowrun)
 			}
 
@@ -184,10 +184,10 @@ func (f *FaxResult) AddEvent(ev *eventsocket.Event) {
 		case "spandsp::rxfaxresult":
 			fallthrough
 		case "spandsp::txfaxresult":
-			if totalpages, err := strconv.ParseUint(ev.Get("Fax-Document-Total-Pages"), 10, 0); err == nil {
+			if totalpages, err := strconv.Atoi(ev.Get("Fax-Document-Total-Pages")); err == nil {
 				f.TotalPages = uint(totalpages)
 			}
-			if transferredpages, err := strconv.ParseUint(ev.Get("Fax-Document-Transferred-Pages"), 10, 0); err == nil {
+			if transferredpages, err := strconv.Atoi(ev.Get("Fax-Document-Transferred-Pages")); err == nil {
 				f.TransferredPages = uint(transferredpages)
 			}
 			if ecm := ev.Get("Fax-Ecm-Used"); ecm == "on" {
@@ -201,7 +201,7 @@ func (f *FaxResult) AddEvent(ev *eventsocket.Event) {
 			if ev.Get("Fax-Success") == "1" {
 				f.Success = true
 			}
-			if rate, err := strconv.ParseUint(ev.Get("Fax-Transfer-Rate"), 10, 0); err == nil {
+			if rate, err := strconv.Atoi(ev.Get("Fax-Transfer-Rate")); err == nil {
 				f.TransferRate = uint(rate)
 			}
 
