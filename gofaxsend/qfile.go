@@ -100,11 +100,11 @@ func (q *Qfile) Write() error {
 
 	var bytes int64
 	for _, param := range q.params {
-		var n int
-		if n, err = q.qfh.WriteString(fmt.Sprintf("%s:%s\n", param.Tag, param.Value)); err != nil {
+		n, err := fmt.Fprintf(q.qfh, "%s:%s\n", param.Tag, param.Value)
+		if err != nil {
 			return err
 		}
-		bytes = bytes + int64(n)
+		bytes += int64(n)
 	}
 
 	if err = q.qfh.Truncate(bytes); err != nil {
