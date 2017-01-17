@@ -216,7 +216,7 @@ func SendQfile(qfilename string) (int, error) {
 	done := false
 	var faxerr FaxError
 
-	for {
+	for !done {
 		select {
 		case page := <-t.PageSent():
 			// Update qfile
@@ -263,10 +263,6 @@ func SendQfile(qfilename string) (int, error) {
 
 		if err = qf.Write(); err != nil {
 			sessionlog.Log("Error updating qfile:", err)
-		}
-
-		if done {
-			break
 		}
 	}
 
