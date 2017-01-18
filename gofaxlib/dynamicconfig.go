@@ -45,8 +45,8 @@ type HylaConfig struct {
 	params []param
 }
 
-// GetFirst returns the first Value found matching given Tag
-func (h *HylaConfig) GetFirst(tag string) string {
+// GetString returns the first Value found matching given Tag
+func (h *HylaConfig) GetString(tag string) string {
 	tag = strings.ToLower(tag)
 	for _, param := range h.params {
 		if param.Tag == tag {
