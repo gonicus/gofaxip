@@ -138,7 +138,7 @@ func (e *EventSocketServer) handler(c *eventsocket.Connection) {
 			logger.Logger.Println("Error calling DynamicConfig:", err)
 		} else {
 			// Check if call should be rejected
-			if gofaxlib.DynamicConfigBool(dc.GetFirst("RejectCall")) {
+			if gofaxlib.DynamicConfigBool(dc.GetString("RejectCall")) {
 				logger.Logger.Println("DynamicConfig decided to reject this call")
 				c.Execute("respond", "404", true)
 				c.Send("exit")
@@ -146,7 +146,7 @@ func (e *EventSocketServer) handler(c *eventsocket.Connection) {
 			}
 
 			// Check if a custom identifier should be set
-			if dynamicCsi := dc.GetFirst("LocalIdentifier"); dynamicCsi != "" {
+			if dynamicCsi := dc.GetString("LocalIdentifier"); dynamicCsi != "" {
 				csi = dynamicCsi
 			}
 

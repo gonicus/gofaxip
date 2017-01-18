@@ -22,6 +22,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"syscall"
 )
@@ -130,14 +131,23 @@ func (q *Qfile) GetAll(tag string) []string {
 	return result
 }
 
-// GetFirst returns the value of the first parameter with given tag.
-func (q *Qfile) GetFirst(tag string) string {
+// GetString returns the value of the first parameter with given tag as string.
+func (q *Qfile) GetString(tag string) string {
 	for _, param := range q.params {
 		if param.Tag == tag {
 			return param.Value
 		}
 	}
 	return ""
+}
+
+// GetInt looks up the value of the first parameter with given tag
+// and returns the parsed value as int.
+func (q *Qfile) GetInt(tag string) (int, error) {
+	if str := q.GetString(tag); str != "" {
+		return strconv.Atoi(str)
+	}
+	return 0, errors.New("Tag not found")
 }
 
 // Set replaces the value of the first found param
