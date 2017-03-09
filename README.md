@@ -23,24 +23,6 @@ GOfax.IP consists of two commands that replace their native HylaFAX conterparts
 * `gofaxsend` is used instead of HylaFAX' `faxsend `
 * `gofaxd` is used instead of HylaFAX' `faxgetty`. Only one instance of `gofaxd` is necessary regardless of the number of receiving channels. 
 
-## Building
-
-GOfax.IP is implemented in [Go](https://golang.org/doc/install), it can be built using `go get`.
-
-```
-go get github.com/gonicus/gofaxip/...
-```
-
-This will produce the binaries `gofaxd` and `gofaxsend`.
-
-## Build debian package
-```
-git clone https://github.com/gonicus/gofaxip
-cd gofaxip
-apt install dh-golang dh-systemd git-buildpackage
-git-buildpackage
-```
-
 ## Installation
 
 We recommend running GOfax.IP on Debian 8 ("Jessie"), so these instructions cover Debian in detail. Of course it is possible to install and use GOfax.IP on other Linux distributions and possibly other Unixes supported by golang, FreeSWITCH and HylaFAX.
@@ -66,6 +48,11 @@ apt-get install hylafax-server freeswitch freeswitch-mod-commands freeswitch-mod
 ### GOfax.IP
 
 See [releases](https://github.com/gonicus/gofaxip/releases) for amd64 Debian packages.
+
+Use ```dpkg -i``` to install the latest package.
+
+See [Building](#building) for instructions on how to build the binaries or Debian packages from source.
+This is only necessary if you want to use the latest/untested version or if you need another architecture than amd64!
 
 ## Configuration
 
@@ -180,3 +167,21 @@ A transmission is regarded as failed and added to the fallback database if SpanD
 
 * Negotiation has happened multiple times
 * Negotiation was successful but transmitted pages contain bad rows
+
+# Building
+
+GOfax.IP is implemented in [Go](https://golang.org/doc/install), it can be built using `go get`.
+
+```
+go get github.com/gonicus/gofaxip/...
+```
+
+This will produce the binaries `gofaxd` and `gofaxsend`.
+
+## Build debian package
+```
+git clone https://github.com/gonicus/gofaxip
+cd gofaxip
+apt install dh-golang dh-systemd git-buildpackage
+git-buildpackage
+```
