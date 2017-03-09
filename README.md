@@ -179,9 +179,13 @@ go get github.com/gonicus/gofaxip/...
 This will produce the binaries `gofaxd` and `gofaxsend`.
 
 ## Build debian package
+
+With golang package from debian repository:
 ```
+apt install dh-golang dh-systemd git-buildpackage
 git clone https://github.com/gonicus/gofaxip
 cd gofaxip
-apt install dh-golang dh-systemd git-buildpackage
-git-buildpackage
+dpkg-buildpackage -us -uc -rfakeroot -b
 ```
+
+If you dont have golang from debian repository installed use ```-d``` to ignore builddeps.
