@@ -1,3 +1,15 @@
+gofaxip (1.1-1) unstable; urgency=medium
+
+  * updated documentation
+  * Allow selecting SIP gateway per job in DynamicConfigOutgoing
+  * Add receiving gateway to DynamicConfig and faxrcvd arguments
+  * various small fixes
+  * Exit with 0 not 1 on shutdown
+  * Set $TRANSFER_RATE and $HANGUPCAUSE in faxrcvd environment
+  * Xferfaxlog: must use the same quoting behavious as hylafax
+
+ -- Sebastian Denz <denz@gonicus.de>  Thu, 09 Mar 2017 13:51:33 +0100
+
 gofaxip (1.0-1) unstable; urgency=medium
 
   * Implement proper Debian packaging
