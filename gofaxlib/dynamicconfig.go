@@ -87,15 +87,11 @@ func DynamicConfig(command string, args ...string) (*HylaConfig, error) {
 }
 
 // DynamicConfigBool interprets a DynamicConfig string value as truth value
-func DynamicConfigBool(value string) (result bool) {
+func DynamicConfigBool(value string) bool {
 	switch strings.ToLower(value) {
-	case "true":
-		fallthrough
-	case "1":
-		fallthrough
-	case "yes":
-		result = true
+	case "true", "1", "yes":
+		return true
 	}
 
-	return
+	return false
 }

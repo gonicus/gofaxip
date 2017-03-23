@@ -127,9 +127,8 @@ func (f *FaxResult) AddEvent(ev *eventsocket.Event) {
 		// Fax results have changed
 		action := ""
 		switch ev.Get("Event-Subclass") {
-		case "spandsp::rxfaxnegociateresult":
-			fallthrough
-		case "spandsp::txfaxnegociateresult":
+		case "spandsp::rxfaxnegociateresult",
+			"spandsp::txfaxnegociateresult":
 			f.NegotiateCount++
 			if ecm := ev.Get("Fax-Ecm-Used"); ecm == "on" {
 				f.Ecm = true
@@ -181,9 +180,8 @@ func (f *FaxResult) AddEvent(ev *eventsocket.Event) {
 			f.PageResults = append(f.PageResults, *pr)
 			f.sessionlog.Logf("Page %d %v: %v", f.TransferredPages, action, *pr)
 
-		case "spandsp::rxfaxresult":
-			fallthrough
-		case "spandsp::txfaxresult":
+		case "spandsp::rxfaxresult",
+			"spandsp::txfaxresult":
 			if totalpages, err := strconv.Atoi(ev.Get("Fax-Document-Total-Pages")); err == nil {
 				f.TotalPages = uint(totalpages)
 			}
