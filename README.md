@@ -58,7 +58,7 @@ This is only necessary if you want to use the latest/untested version or if you 
 
 ### FreeSWITCH
 
-FreeSWITCH has to be able to place received faxes in HylaFAX' `recvq` spool. The simplest way to achieve this is to run FreeSWICH as the `uucp` user. 
+FreeSWITCH has to be able to place received faxes in HylaFAX' `recvq` spool. The simplest way to achieve this is to run FreeSWITCH as the `uucp` user. 
 
 ```
 sudo chown -R uucp.uucp /var/log/freeswitch
@@ -79,7 +79,7 @@ The SIP gateway to use has to be configured in `/etc/freeswitch/gateways/default
 
 ### GOfax.IP
 
-Currently GOfax.IP does not use HylaFAX configuration files *at all*. All configuration for both `gofaxd` and `gofaxsend` is done in the INI-style configuration file `/etc/gofax.conf` which has to be customized.
+Currently GOfax.IP does not use HylaFAX configuration files *at all*. All configurations for both `gofaxd` and `gofaxsend` are made in the INI-style configuration file `/etc/gofax.conf` which has to be customized.
 
 ### HylaFAX
 
@@ -115,7 +115,7 @@ GOfax.IP logs everything it does to syslog.
 
 ## Advanced Features
 
-As the _virtual modems_ visible in HylaFAX are not tied to preconfigured lines but assigned dynamically, it is not feasible to assign static telephone numbers to individual modems. Instead, GOfax.IP can query a `DynamicConfig` script before trying to send outgoing faxes that works similar to the `DynamicConfig` feature in HylaFAX' `faxgetty`. Using the sender's user id (`owner`), it can be used to set the Callerid, TSI and Header for each individual outgoing fax. It is also possible to reject an outgoing fax.
+As the _virtual modems_ visible in HylaFAX are not tied to preconfigured lines but assigned dynamically, it is not possible to assign static telephone numbers to individual modems. Instead, GOfax.IP can query a `DynamicConfig` script before trying to send outgoing faxes which works similarly to the `DynamicConfig` feature in HylaFAX' `faxgetty`. Using the sender's user id (`owner`), it can be used to set the Callerid, TSI and Header for each individual outgoing fax. It is also possible to reject an outgoing fax.
 
 ### DynamicConfig for incoming faxes
 
@@ -156,7 +156,7 @@ The following arguments are provided to the `DynamicConfig` script for outgoing 
 
 ### Fallback from T.38 to SpanDSP softmodem
 
-In rare cases we noticed problems with certain remote stations that could not successfully negotiate with some T.38 Gateways we tested. In the case we observed, the remote tried to use T.4 1-D compression with ECM enabled. After disabling T.38 the fax was successfully received. 
+In rare cases we noticed problems with certain remote stations that could not successfully work with some T.38 Gateways we tested. In the case we observed, the remote tried to use T.4 1-D compression with ECM enabled. After disabling T.38 the fax was successfully received. 
 
 To work around this rare sort of problem and improve compatiblity, GOfax.IP can identify failed transmissions and dynamically disable T.38 for the affected remote station and have FreeSWITCH use SpanDSP's pure software fax implementation. The station is identified by caller id and saved in FreeSWITCH's `mod_db`.
 To enable this feature, set `softmodemfallback = true` in `gofax.conf`.
