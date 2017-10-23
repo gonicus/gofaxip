@@ -221,6 +221,7 @@ func (e *EventSocketServer) handler(c *eventsocket.Connection) {
 	}
 	c.Execute("set", fmt.Sprintf("fax_ident=%s", csi), true)
 	c.Execute("rxfax", filenameAbs, true)
+	c.Execute("hangup", "", false)
 
 	result := gofaxlib.NewFaxResult(channelUUID, sessionlog)
 	es := gofaxlib.NewEventStream(c)
