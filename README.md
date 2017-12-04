@@ -75,7 +75,9 @@ sudo cp -r /usr/share/doc/gofaxip/examples/freeswitch/* /etc/freeswitch/
 
 The SIP gateway to use has to be configured in `/etc/freeswitch/gateways/default.xml`. It is possible to configure multiple gateways for GOfax.IP.
 
-**You have to edit `/etc/freeswitch/vars.xml` and adapt the IP address FreeSWITCH should use for SIP/RTP.**
+**Depending on your installation/SIP provider you have to either:**
+ * edit `/etc/freeswitch/vars.xml` and adapt the IP address FreeSWITCH should use for SIP/RTP.
+ * remove the entire section concerning the `sofia_ip` variable (parameters `sip-port, rtp-ip, sip-ip, ext-rtp-ip, ext-sip-ip`)
 
 ### GOfax.IP
 
