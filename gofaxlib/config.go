@@ -58,6 +58,7 @@ type config struct {
 		FaxNumber     string
 		CallPrefix    string
 		DynamicConfig string
+		CidName       string
 	}
 }
 

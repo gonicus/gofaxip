@@ -65,10 +65,18 @@ func SendQfile(qfilename string) (int, error) {
 
 	faxjob.Number = fmt.Sprint(gofaxlib.Config.Gofaxsend.CallPrefix, qf.GetFirst("number"))
 	faxjob.Cidnum = gofaxlib.Config.Gofaxsend.FaxNumber //qf.GetFirst("faxnumber")
-	faxjob.Cidname = qf.GetFirst("sender")
 	faxjob.Ident = gofaxlib.Config.Freeswitch.Ident
 	faxjob.Header = gofaxlib.Config.Freeswitch.Header
 	faxjob.Gateways = gofaxlib.Config.Freeswitch.Gateway
+
+	switch gofaxlib.Config.Gofaxsend.CidName {
+	case "sender":
+		faxjob.Cidname = qf.GetFirst("sender")
+	case "cidnum":
+		faxjob.Cidname = faxjob.Cidnum
+	default:
+		faxjob.Cidname = gofaxlib.Config.Gofaxsend.CidName
+	}
 
 	if desiredec := qf.GetFirst("desiredec"); desiredec != "" {
 		if ecmMode, err := strconv.Atoi(desiredec); err == nil {
