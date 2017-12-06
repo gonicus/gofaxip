@@ -38,6 +38,7 @@ type SessionLogger interface {
 	Logfile() string
 
 	Log(v ...interface{})
+	Logf(format string, v ...interface{})
 }
 
 type hylasessionlog struct {
@@ -71,6 +72,10 @@ func (h *hylasessionlog) Log(v ...interface{}) {
 	if err := AppendLog(h.logfile, v...); err != nil {
 		logger.Logger.Print(err)
 	}
+}
+
+func (h *hylasessionlog) Logf(format string, v ...interface{}) {
+	h.Log(fmt.Sprintf(format, v...))
 }
 
 func (h *hylasessionlog) CommSeq() uint64 {

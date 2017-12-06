@@ -48,11 +48,13 @@ func SendQfile(qfilename string) (int, error) {
 	}
 	defer qf.Close()
 
-	var jobid uint64
+	var jobid uint
 
-	jobidstr := qf.GetFirst("jobid")
+	jobidstr := qf.GetString("jobid")
 	if jobidstr != "" {
-		if jobid, err = strconv.ParseUint(jobidstr, 10, 0); err != nil {
+		if i, err := strconv.Atoi(jobidstr); err == nil {
+			jobid = uint(i)
+		} else {
 			logger.Logger.Println("Error parsing jobid")
 		}
 	}
@@ -63,39 +65,35 @@ func SendQfile(qfilename string) (int, error) {
 		return sendFailed, fmt.Errorf("Cannot create fax job: %s", err)
 	}
 
-	faxjob.Number = fmt.Sprint(gofaxlib.Config.Gofaxsend.CallPrefix, qf.GetFirst("number"))
-	faxjob.Cidnum = gofaxlib.Config.Gofaxsend.FaxNumber //qf.GetFirst("faxnumber")
+	faxjob.Number = fmt.Sprint(gofaxlib.Config.Gofaxsend.CallPrefix, qf.GetString("number"))
+	faxjob.Cidnum = gofaxlib.Config.Gofaxsend.FaxNumber //qf.GetString("faxnumber")
 	faxjob.Ident = gofaxlib.Config.Freeswitch.Ident
 	faxjob.Header = gofaxlib.Config.Freeswitch.Header
 	faxjob.Gateways = gofaxlib.Config.Freeswitch.Gateway
 
 	switch gofaxlib.Config.Gofaxsend.CidName {
 	case "sender":
-		faxjob.Cidname = qf.GetFirst("sender")
+		faxjob.Cidname = qf.GetString("sender")
 	case "cidnum":
 		faxjob.Cidname = faxjob.Cidnum
 	default:
 		faxjob.Cidname = gofaxlib.Config.Gofaxsend.CidName
 	}
 
-	if desiredec := qf.GetFirst("desiredec"); desiredec != "" {
-		if ecmMode, err := strconv.Atoi(desiredec); err == nil {
-			faxjob.UseECM = ecmMode != 0
-		}
+	if ecmMode, err := qf.GetInt("desiredec"); err == nil {
+		faxjob.UseECM = ecmMode != 0
 	}
 
-	if desiredbr := qf.GetFirst("desiredbr"); desiredbr != "" {
-		if brMode, err := strconv.Atoi(desiredbr); err == nil {
-			if brMode < 5 { // < 14400bps
-				faxjob.DisableV17 = true
-			}
+	if brMode, err := qf.GetInt("desiredbr"); err == nil {
+		if brMode < 5 { // < 14400bps
+			faxjob.DisableV17 = true
 		}
 	}
 
 	// Query DynamicConfig
 	if dcCmd := gofaxlib.Config.Gofaxsend.DynamicConfig; dcCmd != "" {
 		logger.Logger.Println("Calling DynamicConfig script", dcCmd)
-		dc, err := gofaxlib.DynamicConfig(dcCmd, *deviceID, qf.GetFirst("owner"), qf.GetFirst("number"), jobidstr)
+		dc, err := gofaxlib.DynamicConfig(dcCmd, *deviceID, qf.GetString("owner"), qf.GetString("number"), jobidstr)
 		if err != nil {
 			errmsg := fmt.Sprintln("Error calling DynamicConfig:", err)
 			logger.Logger.Println(errmsg)
@@ -108,7 +106,7 @@ func SendQfile(qfilename string) (int, error) {
 		}
 
 		// Check if call should be rejected
-		if gofaxlib.DynamicConfigBool(dc.GetFirst("RejectCall")) {
+		if gofaxlib.DynamicConfigBool(dc.GetString("RejectCall")) {
 			errmsg := "Transmission rejected by DynamicConfig"
 			logger.Logger.Println(errmsg)
 			qf.Set("status", errmsg)
@@ -119,19 +117,19 @@ func SendQfile(qfilename string) (int, error) {
 		}
 
 		// Check if a custom identifier should be set
-		if dynamicTsi := dc.GetFirst("LocalIdentifier"); dynamicTsi != "" {
+		if dynamicTsi := dc.GetString("LocalIdentifier"); dynamicTsi != "" {
 			faxjob.Ident = dynamicTsi
 		}
 
-		if tagline := dc.GetFirst("TagLine"); tagline != "" {
+		if tagline := dc.GetString("TagLine"); tagline != "" {
 			faxjob.Header = tagline
 		}
 
-		if faxnumber := dc.GetFirst("FAXNumber"); faxnumber != "" {
+		if faxnumber := dc.GetString("FAXNumber"); faxnumber != "" {
 			faxjob.Cidnum = faxnumber
 		}
 
-		if gatewayString := dc.GetFirst("Gateway"); gatewayString != "" {
+		if gatewayString := dc.GetString("Gateway"); gatewayString != "" {
 			faxjob.Gateways = strings.Split(gatewayString, ",")
 		}
 
@@ -146,7 +144,7 @@ func SendQfile(qfilename string) (int, error) {
 	qf.Set("commid", sessionlog.CommID())
 
 	logger.Logger.Println("Logging events for commid", sessionlog.CommID(), "to", sessionlog.Logfile())
-	sessionlog.Log(fmt.Sprintf("Processing HylaFAX Job %d as %v", jobid, faxjob.UUID))
+	sessionlog.Logf("Processing HylaFAX Job %d as %v", jobid, faxjob.UUID)
 
 	// Add TIFFs from queue file
 	faxparts := qf.GetAll("fax")
@@ -171,22 +169,13 @@ func SendQfile(qfilename string) (int, error) {
 	}
 
 	// Total attempted calls
-	totdials, err := strconv.Atoi(qf.GetFirst("totdials"))
-	if err != nil {
-		totdials = 0
-	}
+	totdials, _ := qf.GetInt("totdials")
 
 	// Consecutive failed attempts to place a call
-	ndials, err := strconv.Atoi(qf.GetFirst("ndials"))
-	if err != nil {
-		ndials = 0
-	}
+	ndials, _ := qf.GetInt("ndials")
 
 	// Total answered calls
-	tottries, err := strconv.Atoi(qf.GetFirst("tottries"))
-	if err != nil {
-		tottries = 0
-	}
+	tottries, _ := qf.GetInt("tottries")
 
 	// Send job
 	qf.Set("status", "Dialing")
@@ -204,7 +193,7 @@ func SendQfile(qfilename string) (int, error) {
 	done := false
 	var faxerr FaxError
 
-	for {
+	for !done {
 		select {
 		case page := <-t.PageSent():
 			// Update qfile
@@ -222,7 +211,7 @@ func SendQfile(qfilename string) (int, error) {
 				if result.Success {
 					qf.Set("returned", strconv.Itoa(sendDone))
 					returned = sendDone
-					sessionlog.Log(fmt.Sprintf("Success: %v, Hangup Cause: %v, Result: %v", result.Success, result.Hangupcause, result.ResultText))
+					sessionlog.Logf("Success: %v, Hangup Cause: %v, Result: %v", result.Success, result.Hangupcause, result.ResultText)
 				}
 			} else {
 				// Negotiation finished
@@ -252,20 +241,16 @@ func SendQfile(qfilename string) (int, error) {
 		if err = qf.Write(); err != nil {
 			sessionlog.Log("Error updating qfile:", err)
 		}
-
-		if done {
-			break
-		}
 	}
 
 	if result != nil {
 		xfl := gofaxlib.NewXFRecord(result)
 		xfl.Modem = *deviceID
 		xfl.Jobid = uint(jobid)
-		xfl.Jobtag = qf.GetFirst("jobtag")
-		xfl.Sender = qf.GetFirst("mailaddr")
-		xfl.Destnum = qf.GetFirst("number")
-		xfl.Owner = qf.GetFirst("owner")
+		xfl.Jobtag = qf.GetString("jobtag")
+		xfl.Sender = qf.GetString("mailaddr")
+		xfl.Destnum = qf.GetString("number")
+		xfl.Owner = qf.GetString("owner")
 		if err = xfl.SaveTransmissionReport(); err != nil {
 			sessionlog.Log(err)
 		}

@@ -18,6 +18,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"os/signal"
@@ -114,7 +115,7 @@ func (t *transmission) start() {
 			disableT38 = false
 		}
 		if disableT38 {
-			t.sessionlog.Log(fmt.Sprintf("Softmodem fallback active for destination %s, disabling T.38", t.faxjob.Number))
+			t.sessionlog.Logf("Softmodem fallback active for destination %s, disabling T.38", t.faxjob.Number)
 		}
 	}
 
@@ -128,32 +129,30 @@ func (t *transmission) start() {
 		"fax_header":                   t.faxjob.Header,
 		"fax_use_ecm":                  strconv.FormatBool(t.faxjob.UseECM),
 		"fax_disable_v17":              strconv.FormatBool(t.faxjob.DisableV17),
+		"fax_enable_t38":               strconv.FormatBool(!disableT38),
 		"fax_verbose":                  strconv.FormatBool(gofaxlib.Config.Freeswitch.Verbose),
 	}
 
-	if disableT38 {
-		dsVariablesMap["fax_enable_t38"] = "false"
-	} else {
-		dsVariablesMap["fax_enable_t38"] = "true"
-	}
+	var dsVariables bytes.Buffer
+	var dsGateways bytes.Buffer
 
-	dsVariablesPairs := make([]string, len(dsVariablesMap))
-	i := 0
 	for k, v := range dsVariablesMap {
-		dsVariablesPairs[i] = fmt.Sprintf("%v='%v'", k, v)
-		i++
+		if dsVariables.Len() > 0 {
+			dsVariables.WriteByte(',')
+		}
+		dsVariables.WriteString(fmt.Sprintf("%v='%v'", k, v))
 	}
-	dsVariables := strings.Join(dsVariablesPairs, ",")
 
 	// Try gateways in configured order
-	dsGatewaysStrings := make([]string, len(t.faxjob.Gateways))
-	for i, gw := range t.faxjob.Gateways {
-		dsGatewaysStrings[i] = fmt.Sprintf("sofia/gateway/%v/%v", gw, t.faxjob.Number)
+	for _, gw := range t.faxjob.Gateways {
+		if dsGateways.Len() > 0 {
+			dsGateways.WriteByte('|')
+		}
+		dsGateways.WriteString(fmt.Sprintf("sofia/gateway/%v/%v", gw, t.faxjob.Number))
 	}
-	dsGateways := strings.Join(dsGatewaysStrings, "|")
 
-	dialstring := fmt.Sprintf("{%v}%v", dsVariables, dsGateways)
-	//t.sessionlog.Log(fmt.Sprintf("%v Dialstring: %v", faxjob.UUID, dialstring))
+	dialstring := fmt.Sprintf("{%v}%v", dsVariables.String(), dsGateways.String())
+	//t.sessionlog.Logf("%v Dialstring: %v", faxjob.UUID, dialstring)
 
 	// Originate call
 	t.sessionlog.Log("Originating channel to", t.faxjob.Number, "using gateway", strings.Join(t.faxjob.Gateways, ","))
@@ -189,7 +188,7 @@ func (t *transmission) start() {
 
 					if result.NegotiateCount > 1 {
 						// Activate fallback if negotiation was repeated
-						t.sessionlog.Log(fmt.Sprintf("Fax failed with %d negotiations, enabling softmodem fallback for calls from/to %s.", result.NegotiateCount, t.faxjob.Number))
+						t.sessionlog.Logf("Fax failed with %d negotiations, enabling softmodem fallback for calls from/to %s.", result.NegotiateCount, t.faxjob.Number)
 						activateFallback = true
 					} else {
 						var badrows uint
@@ -198,7 +197,7 @@ func (t *transmission) start() {
 						}
 						if badrows > 0 {
 							// Activate fallback if any bad rows were present
-							t.sessionlog.Log(fmt.Sprintf("Fax failed with %d bad rows in %d pages, enabling softmodem fallback for calls from/to %s.", badrows, result.TransferredPages, t.faxjob.Number))
+							t.sessionlog.Logf("Fax failed with %d bad rows in %d pages, enabling softmodem fallback for calls from/to %s.", badrows, result.TransferredPages, t.faxjob.Number)
 							activateFallback = true
 						}
 					}
@@ -225,7 +224,7 @@ func (t *transmission) start() {
 			t.errorChan <- NewFaxError(err.Error(), true)
 			return
 		case kill := <-sigchan:
-			t.sessionlog.Log(fmt.Sprintf("%v Received signal %v, destroying channel", t.faxjob.UUID, kill))
+			t.sessionlog.Logf("%v Received signal %v, destroying channel", t.faxjob.UUID, kill)
 			t.conn.Send(fmt.Sprintf("api uuid_kill %v", t.faxjob.UUID))
 			os.Remove(t.faxjob.Filename)
 			t.errorChan <- NewFaxError(fmt.Sprintf("Killed by signal %v", kill), false)
