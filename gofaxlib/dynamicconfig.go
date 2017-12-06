@@ -45,8 +45,8 @@ type HylaConfig struct {
 	params []param
 }
 
-// GetFirst returns the first Value found matching given Tag
-func (h *HylaConfig) GetFirst(tag string) string {
+// GetString returns the first Value found matching given Tag
+func (h *HylaConfig) GetString(tag string) string {
 	tag = strings.ToLower(tag)
 	for _, param := range h.params {
 		if param.Tag == tag {
@@ -87,15 +87,11 @@ func DynamicConfig(command string, args ...string) (*HylaConfig, error) {
 }
 
 // DynamicConfigBool interprets a DynamicConfig string value as truth value
-func DynamicConfigBool(value string) (result bool) {
+func DynamicConfigBool(value string) bool {
 	switch strings.ToLower(value) {
-	case "true":
-		fallthrough
-	case "1":
-		fallthrough
-	case "yes":
-		result = true
+	case "true", "1", "yes":
+		return true
 	}
 
-	return
+	return false
 }
