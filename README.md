@@ -170,6 +170,11 @@ A transmission is regarded as failed and added to the fallback database if SpanD
 * Negotiation has happened multiple times
 * Negotiation was successful but transmitted pages contain bad rows
 
+### Setting the Displayname for outgoing faxes
+
+Normally the Displayname is populated with the content of the `sender` field from the qfile.
+If you dont want to expose this information you can use the parameter `cidname` in `gofax.conf` to set the Displayname to the Calleridnum or any static string.
+
 # Building
 
 GOfax.IP is implemented in [Go](https://golang.org/doc/install), it can be built using `go get`.
@@ -182,9 +187,13 @@ This will produce the binaries `gofaxd` and `gofaxsend`.
 
 ## Build debian package
 
+You need golang and dh-golang from jessie-backports.
+
 With golang package from debian repository:
 ```
-apt install dh-golang dh-systemd git-buildpackage
+echo "deb http://ftp.debian.org/debian jessie-backports main" > /etc/apt/sources.list.d/jessie-backports.list
+apt update
+apt install dh-golang dh-systemd golang -t jessie-backports
 git clone https://github.com/gonicus/gofaxip
 cd gofaxip
 dpkg-buildpackage -us -uc -rfakeroot -b
