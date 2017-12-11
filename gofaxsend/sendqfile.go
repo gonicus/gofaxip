@@ -182,7 +182,7 @@ func SendQfile(qfilename string) (int, error) {
 	if err != nil {
 		v17retry = 0
 	}
-	if v17retry >0  && tottries >= v17retry {
+	if v17retry > 0 && tottries >= v17retry {
 		faxjob.DisableV17 = true
 	}
 
@@ -191,10 +191,10 @@ func SendQfile(qfilename string) (int, error) {
 	if err != nil {
 		ecmretry = 0
 	}
-	if ecmretry >0  && tottries >= ecmretry {
+	if ecmretry > 0 && tottries >= ecmretry {
 		faxjob.UseECM = false
 	}
-	
+
 	// Send job
 	qf.Set("status", "Dialing")
 	totdials++
