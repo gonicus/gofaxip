@@ -73,7 +73,7 @@ func SendQfile(qfilename string) (int, error) {
 
 	switch gofaxlib.Config.Gofaxsend.CidName {
 	case "sender":
-		faxjob.Cidname = qf.GetFirst("sender")
+		faxjob.Cidname = qf.GetString("sender")
 	case "cidnum":
 		faxjob.Cidname = faxjob.Cidnum
 	default:
@@ -82,7 +82,6 @@ func SendQfile(qfilename string) (int, error) {
 
 	if ecmMode, err := qf.GetInt("desiredec"); err == nil {
 		faxjob.UseECM = ecmMode != 0
-	}
 	}
 
 	if brMode, err := qf.GetInt("desiredbr"); err == nil {
