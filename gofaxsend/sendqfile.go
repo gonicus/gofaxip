@@ -177,6 +177,24 @@ func SendQfile(qfilename string) (int, error) {
 	// Total answered calls
 	tottries, _ := qf.GetInt("tottries")
 
+	//Auto fallback to slow baudrate after to many tries
+	v17retry, err := strconv.Atoi(gofaxlib.Config.Gofaxsend.DisableV17AfterRetry)
+	if err != nil {
+		v17retry = 0
+	}
+	if v17retry > 0 && tottries >= v17retry {
+		faxjob.DisableV17 = true
+	}
+
+	//Auto disable ECM after to many tries
+	ecmretry, err := strconv.Atoi(gofaxlib.Config.Gofaxsend.DisableECMAfterRetry)
+	if err != nil {
+		ecmretry = 0
+	}
+	if ecmretry > 0 && tottries >= ecmretry {
+		faxjob.UseECM = false
+	}
+
 	// Send job
 	qf.Set("status", "Dialing")
 	totdials++

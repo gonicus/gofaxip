@@ -55,10 +55,12 @@ type config struct {
 		AllocateInboundDevices bool
 	}
 	Gofaxsend struct {
-		FaxNumber     string
-		CallPrefix    string
-		DynamicConfig string
-		CidName       string
+		FaxNumber            string
+		CallPrefix           string
+		DynamicConfig        string
+		DisableV17AfterRetry string
+		DisableECMAfterRetry string
+		CidName              string
 	}
 }
 
