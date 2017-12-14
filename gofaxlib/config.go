@@ -38,7 +38,6 @@ type config struct {
 		Ident             string
 		Header            string
 		Verbose           bool
-		DisableT38        bool
 		SoftmodemFallback bool
 	}
 	Hylafax struct {
@@ -47,6 +46,8 @@ type config struct {
 		Xferfaxlog string
 	}
 	Gofaxd struct {
+		AcceptT38              bool
+		OfferT38               bool
 		Socket                 string
 		Answerafter            uint64
 		Waittime               uint64
@@ -55,6 +56,8 @@ type config struct {
 		AllocateInboundDevices bool
 	}
 	Gofaxsend struct {
+		AcceptT38            bool
+		OfferT38             bool
 		FaxNumber            string
 		CallPrefix           string
 		DynamicConfig        string
