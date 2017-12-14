@@ -104,9 +104,9 @@ func (t *transmission) start() {
 		return
 	}
 
-	// Check if T.38 should be disabled
-	offerT38 := gofaxlib.Config.Gofaxsend.OfferT38
-	acceptT38 := gofaxlib.Config.Gofaxsend.AcceptT38
+	// Check if T.38 should be enabled
+	requestT38 := gofaxlib.Config.Gofaxsend.RequestT38
+	enableT38 := gofaxlib.Config.Gofaxsend.EnableT38
 
 	fallback, err := gofaxlib.GetSoftmodemFallback(t.conn, t.faxjob.Number)
 	if err != nil {
@@ -114,8 +114,8 @@ func (t *transmission) start() {
 	}
 	if fallback {
 		t.sessionlog.Logf("Softmodem fallback active for destination %s, disabling T.38", t.faxjob.Number)
-		acceptT38 = false
-		offerT38 = false
+		enableT38 = false
+		requestT38 = false
 	}
 
 	// Assemble dialstring
@@ -128,8 +128,8 @@ func (t *transmission) start() {
 		"fax_header":                   t.faxjob.Header,
 		"fax_use_ecm":                  strconv.FormatBool(t.faxjob.UseECM),
 		"fax_disable_v17":              strconv.FormatBool(t.faxjob.DisableV17),
-		"fax_enable_t38":               strconv.FormatBool(acceptT38),
-		"fax_enable_t38_request":       strconv.FormatBool(offerT38),
+		"fax_enable_t38":               strconv.FormatBool(enableT38),
+		"fax_enable_t38_request":       strconv.FormatBool(requestT38),
 		"fax_verbose":                  strconv.FormatBool(gofaxlib.Config.Freeswitch.Verbose),
 	}
 

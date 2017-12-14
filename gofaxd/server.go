@@ -163,9 +163,9 @@ func (e *EventSocketServer) handler(c *eventsocket.Connection) {
 	logger.Logger.Println(channelUUID, "Logging events for commid", sessionlog.CommID(), "to", sessionlog.Logfile())
 	sessionlog.Log("Inbound channel UUID: ", channelUUID)
 
-	// Check if T.38 should be disabled
-	offerT38 := gofaxlib.Config.Gofaxsend.OfferT38
-	acceptT38 := gofaxlib.Config.Gofaxsend.AcceptT38
+	// Check if T.38 should be enabled
+	requestT38 := gofaxlib.Config.Gofaxd.RequestT38
+	enableT38 := gofaxlib.Config.Gofaxd.EnableT38
 
 	fallback, err := gofaxlib.GetSoftmodemFallback(nil, cidnum)
 	if err != nil {
@@ -173,8 +173,8 @@ func (e *EventSocketServer) handler(c *eventsocket.Connection) {
 	}
 	if fallback {
 		sessionlog.Logf("Softmodem fallback active for caller %s, disabling T.38", cidnum)
-		acceptT38 = false
-		offerT38 = false
+		enableT38 = false
+		requestT38 = false
 	}
 	sessionlog.Logf("Accepting call to %v from %v <%v> via gateway %v with commid %v", recipient, cidname, cidnum, gateway, sessionlog.CommID())
 
@@ -211,16 +211,8 @@ func (e *EventSocketServer) handler(c *eventsocket.Connection) {
 
 	sessionlog.Log("Rxfax to", filenameAbs)
 
-	if acceptT38 {
-		c.Execute("set", "fax_enable_t38=true", true)
-	} else {
-		c.Execute("set", "fax_enable_t38=false", true)
-	}
-	if offerT38 {
-		c.Execute("set", "fax_enable_t38_request=true", true)
-	} else {
-		c.Execute("set", "fax_enable_t38_request=false", true)
-	}
+	c.Execute("set", fmt.Sprintf("fax_enable_t38=%s", strconv.FormatBool(enableT38)), true)
+	c.Execute("set", fmt.Sprintf("fax_enable_t38_request=%s", strconv.FormatBool(requestT38)), true)
 	c.Execute("set", fmt.Sprintf("fax_ident=%s", csi), true)
 	c.Execute("rxfax", filenameAbs, true)
 	c.Execute("hangup", "", true)

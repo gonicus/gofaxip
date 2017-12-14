@@ -46,8 +46,8 @@ type config struct {
 		Xferfaxlog string
 	}
 	Gofaxd struct {
-		AcceptT38              bool
-		OfferT38               bool
+		EnableT38              bool
+		RequestT38             bool
 		Socket                 string
 		Answerafter            uint64
 		Waittime               uint64
@@ -56,8 +56,8 @@ type config struct {
 		AllocateInboundDevices bool
 	}
 	Gofaxsend struct {
-		AcceptT38            bool
-		OfferT38             bool
+		EnableT38            bool
+		RequestT38           bool
 		FaxNumber            string
 		CallPrefix           string
 		DynamicConfig        string
