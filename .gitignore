@@ -7,4 +7,7 @@ debian/gofaxip.prerm.debhelper
 debian/gofaxip.substvars
 debian/gofaxip/
 obj-x86_64-linux-gnu/
-
+contrib/*.build
+contrib/*.buildinfo
+contrib/*.changes
+contrib/*.deb
