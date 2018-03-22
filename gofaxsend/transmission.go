@@ -161,7 +161,11 @@ func (t *transmission) start() {
 		t.conn.Send(fmt.Sprintf("uuid_dump %v", t.faxjob.UUID))
 		hangupcause := strings.TrimSpace(err.Error())
 		t.sessionlog.Log("Originate failed with hangup cause", hangupcause)
-		t.errorChan <- NewFaxError(hangupcause, true)
+		if gofaxlib.FailedHangupcause(hangupcause) {
+			t.errorChan <- NewFaxError(hangupcause, false)
+		} else {
+			t.errorChan <- NewFaxError(hangupcause, true)
+		}
 		return
 	}
 	t.sessionlog.Log("Originate successful")
