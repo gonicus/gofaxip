@@ -65,7 +65,7 @@ func SendQfile(qfilename string) (int, error) {
 		return sendFailed, fmt.Errorf("Cannot create fax job: %s", err)
 	}
 
-	faxjob.Number = fmt.Sprint(gofaxlib.Config.Gofaxsend.CallPrefix, qf.GetString("number"))
+	faxjob.Number = fmt.Sprint(gofaxlib.Config.Gofaxsend.CallPrefix, qf.GetString("external"))
 	faxjob.Cidnum = gofaxlib.Config.Gofaxsend.FaxNumber //qf.GetString("faxnumber")
 	faxjob.Ident = gofaxlib.Config.Freeswitch.Ident
 	faxjob.Header = gofaxlib.Config.Freeswitch.Header
