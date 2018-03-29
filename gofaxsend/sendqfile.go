@@ -74,6 +74,8 @@ func SendQfile(qfilename string) (int, error) {
 	switch gofaxlib.Config.Gofaxsend.CidName {
 	case "sender":
 		faxjob.Cidname = qf.GetString("sender")
+	case "number":
+		faxjob.Cidname = qf.GetString("number")
 	case "cidnum":
 		faxjob.Cidname = faxjob.Cidnum
 	default:
