@@ -71,17 +71,6 @@ func SendQfile(qfilename string) (int, error) {
 	faxjob.Header = gofaxlib.Config.Freeswitch.Header
 	faxjob.Gateways = gofaxlib.Config.Freeswitch.Gateway
 
-	switch gofaxlib.Config.Gofaxsend.CidName {
-	case "sender":
-		faxjob.Cidname = qf.GetString("sender")
-	case "number":
-		faxjob.Cidname = qf.GetString("number")
-	case "cidnum":
-		faxjob.Cidname = faxjob.Cidnum
-	default:
-		faxjob.Cidname = gofaxlib.Config.Gofaxsend.CidName
-	}
-
 	if ecmMode, err := qf.GetInt("desiredec"); err == nil {
 		faxjob.UseECM = ecmMode != 0
 	}
@@ -135,6 +124,17 @@ func SendQfile(qfilename string) (int, error) {
 			faxjob.Gateways = strings.Split(gatewayString, ",")
 		}
 
+	}
+
+	switch gofaxlib.Config.Gofaxsend.CidName {
+	case "sender":
+		faxjob.Cidname = qf.GetString("sender")
+	case "number":
+		faxjob.Cidname = qf.GetString("number")
+	case "cidnum":
+		faxjob.Cidname = faxjob.Cidnum
+	default:
+		faxjob.Cidname = gofaxlib.Config.Gofaxsend.CidName
 	}
 
 	// Start session
