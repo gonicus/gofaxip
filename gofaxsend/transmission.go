@@ -162,9 +162,9 @@ func (t *transmission) start() {
 		hangupcause := strings.TrimSpace(err.Error())
 		t.sessionlog.Log("Originate failed with hangup cause", hangupcause)
 		if gofaxlib.FailedHangupcause(hangupcause) {
-			t.errorChan <- NewFaxError(hangupcause, false)
+			t.errorChan <- NewFaxError("Failed Response: "+hangupcause, false)
 		} else {
-			t.errorChan <- NewFaxError(hangupcause, true)
+			t.errorChan <- NewFaxError("Failed Response: "+hangupcause, true)
 		}
 		return
 	}
