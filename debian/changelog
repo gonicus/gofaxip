@@ -1,3 +1,26 @@
+gofaxip (1.2-1) unstable; urgency=medium
+
+  * config parameters for t.38 handling have changed
+    removed freeswitch/disablet38
+    added gofaxd/acceptt38 and gofaxd/offert38
+    added gofaxsend/acceptt38 and gofaxsend/offert38
+  * code refactoring - by corny
+  * fixed missing hangup after rxfax() - by sjaeckel
+  * HylaFax Dialrules are considered now - by sjaeckel
+  * automatic fallback to 9600 and ecm after configurable number of retries - by icebear0815
+    see gofaxd.conf parameters disablev17afterretry and disableECMafterretry for details
+  * allow configuration of the sip displayname for outgoing faxes
+    see gofaxd.conf parameter cidname for details
+  * allow configuration of hangupcauses which will not be retried by hylafax
+    see parameter failedresponse in gofax.conf
+  * documentation updated
+  * depending on your setup you could suffer from FreeSWITCH Issue FS-10824
+  * if you encounter problems with hanging channels after sending, try to
+    downgrade FreeSwitch to 1.6.16
+    see #31 for further information
+
+ -- Sebastian Denz <denz@gonicus.de>  Mon, 30 Apr 2018 10:28:39 +0200
+
 gofaxip (1.1-1) unstable; urgency=medium
 
   * updated documentation
