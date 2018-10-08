@@ -20,6 +20,7 @@ package logger
 import (
 	"log"
 	"log/syslog"
+	"os"
 )
 
 const (
@@ -34,6 +35,13 @@ var (
 func init() {
 	var err error
 	log.SetFlags(LOG_FLAGS)
+
+	if os.Getenv("CI") != "" {
+		// Running in Circle CI
+		Logger = log.New(os.Stderr, "", LOG_FLAGS)
+		return
+	}
+
 	Logger, err = syslog.NewLogger(LOG_PRIORITY, LOG_FLAGS)
 	if err != nil {
 		log.Fatal(err)

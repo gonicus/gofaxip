@@ -1,5 +1,7 @@
 # GOfax.IP
 
+ [![CircleCI](https://circleci.com/gh/gonicus/gofaxip/tree/master.svg?style=shield)](https://circleci.com/gh/gonicus/gofaxip/tree/master) 
+
 GOfax.IP is a HylaFAX backend/connector providing Fax over IP support for HylaFAX using FreeSWITCH and SpanDSP through FreeSWITCH's mod_spandsp.
 
 In contrast to solutions like t38modem, iaxmodem and mod_spandsp's softmodem feature, GOfax.IP does not emulate fax modem devices but replaces HylaFAX's `faxgetty` and `faxsend` processes to communicate directly with FreeSWITCH using FreeSWITCH's Event Socket interface.
