@@ -27,7 +27,7 @@ GOfax.IP consists of two commands that replace their native HylaFAX conterparts
 
 ## Installation
 
-We recommend running GOfax.IP on Debian 8 ("Jessie"), so these instructions cover Debian in detail. Of course it is possible to install and use GOfax.IP on other Linux distributions and possibly other Unixes supported by golang, FreeSWITCH and HylaFAX.
+We recommend running GOfax.IP on Debian 10 ("Buster"), so these instructions cover Debian in detail. Of course it is possible to install and use GOfax.IP on other Linux distributions and possibly other Unixes supported by golang, FreeSWITCH and HylaFAX.
 
 ### Dependencies
 
@@ -36,8 +36,9 @@ The official FreeSWITCH Debian repository can be used to obtain and install all 
 Adding the repository:
 
 ```
-curl http://files.freeswitch.org/repo/deb/debian/freeswitch_archive_g0.pub | apt-key add -
-echo 'deb http://files.freeswitch.org/repo/deb/freeswitch-1.6/ jessie main' >> /etc/apt/sources.list.d/freeswitch.list
+apt-get update && apt-get install -y gnupg2 wget lsb-release
+wget -O - https://files.freeswitch.org/repo/deb/debian-release/fsstretch-archive-keyring.asc | apt-key add -
+echo "deb http://files.freeswitch.org/repo/deb/debian-release/ `lsb_release -sc` main" > /etc/apt/sources.list.d/freeswitch.list
 ```
 
 ### Installing packages
@@ -165,7 +166,7 @@ In rare cases we noticed problems with certain remote stations that could not su
 To work around this rare sort of problem and improve compatiblity, GOfax.IP can identify failed transmissions and dynamically disable T.38 for the affected remote station and have FreeSWITCH use SpanDSP's pure software fax implementation. The station is identified by caller id and saved in FreeSWITCH's `mod_db`.
 To enable this feature, set `softmodemfallback = true` in `gofax.conf`.
 
-Note that this will only affect all subsequent calls from/to the remote station, assuming that the remote station will retry a failed fax. Entries in the fallback list are persistant and will not be expired by GOfax.IP. It is possible however to manually expire entries from mod_db. The used `<realm>/<key>/<value>` is `fallback/<callerid>/<unix_timestamp>`, with unix_timestamp being the time when the entry was added. See https://wiki.freeswitch.org/wiki/Mod_db for details on mod_db. 
+Note that this will only affect all subsequent calls from/to the remote station, assuming that the remote station will retry a failed fax. Entries in the fallback list are persistant and will not be expired by GOfax.IP. It is possible however to manually expire entries from mod_db. The used `<realm>/<key>/<value>` is `fallback/<callerid>/<unix_timestamp>`, with unix_timestamp being the time when the entry was added. See https://freeswitch.org/confluence/display/FREESWITCH/mod_db for details on mod_db. 
 
 A transmission is regarded as failed and added to the fallback database if SpanDSP reports the transmission as not successful and one of the following conditions apply:
 
@@ -193,9 +194,8 @@ You need golang and dh-golang from jessie-backports.
 
 With golang package from debian repository:
 ```
-echo "deb http://ftp.debian.org/debian jessie-backports main" > /etc/apt/sources.list.d/jessie-backports.list
 apt update
-apt install dh-golang dh-systemd golang -t jessie-backports
+apt install git dh-golang dh-systemd golang
 git clone https://github.com/gonicus/gofaxip
 cd gofaxip
 dpkg-buildpackage -us -uc -rfakeroot -b
