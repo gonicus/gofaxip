@@ -2,6 +2,8 @@ package gofaxlib
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/fiorix/go-eventsocket/eventsocket"
 )
 
@@ -40,4 +42,14 @@ func FreeSwitchDBExists(c *eventsocket.Connection, realm string, key string) (bo
 	}
 
 	return result.Body == "true", nil
+}
+
+// FreeSwitchDBList returns a list of all keys in given realm
+// If realm is empty, a list of all realms is returned
+func FreeSwitchDBList(c *eventsocket.Connection, realm string) ([]string, error) {
+	result, err := c.Send(fmt.Sprintf("api db list/%s", realm))
+	if err != nil {
+		return []string{}, err
+	}
+	return strings.Split(result.Body, ","), nil
 }
