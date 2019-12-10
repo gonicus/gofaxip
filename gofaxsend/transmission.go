@@ -118,7 +118,7 @@ func (t *transmission) start() {
 		requestT38 = false
 	}
 
-	// Assemble dialstring
+	// Collect dialstring variables
 	dsVariablesMap := map[string]string{
 		"ignore_early_media":           "true",
 		"origination_uuid":             t.faxjob.UUID.String(),
@@ -133,6 +133,24 @@ func (t *transmission) start() {
 		"fax_verbose":                  strconv.FormatBool(gofaxlib.Config.Freeswitch.Verbose),
 	}
 
+	// Look up variable overrides for given number
+	overrideRealm := fmt.Sprintf("override-%s", t.faxjob.Number)
+	overrides, err := gofaxlib.FreeSwitchDBList(t.conn, overrideRealm)
+	if err != nil {
+		t.sessionlog.Log(err)
+	} else {
+		for _, varName := range overrides {
+			varValue, err := gofaxlib.FreeSwitchDBSelect(t.conn, overrideRealm, varName)
+			if err != nil {
+				t.sessionlog.Log(err)
+			} else {
+				t.sessionlog.Log(fmt.Sprintf("Overriding dialstring variable %s=%s", varName, varValue))
+				dsVariablesMap[varName] = varValue
+			}
+		}
+	}
+
+	// Assemble dialstring
 	var dsVariables bytes.Buffer
 	var dsGateways bytes.Buffer
 
@@ -152,7 +170,7 @@ func (t *transmission) start() {
 	}
 
 	dialstring := fmt.Sprintf("{%v}%v", dsVariables.String(), dsGateways.String())
-	//t.sessionlog.Logf("Dialstring: %v", dialstring)
+	t.sessionlog.Logf("Dialstring: %v", dialstring)
 
 	// Originate call
 	t.sessionlog.Log("Originating channel to", t.faxjob.Number, "using gateway", strings.Join(t.faxjob.Gateways, ","))
