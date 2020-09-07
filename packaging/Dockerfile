@@ -1,4 +1,4 @@
-FROM debian:stretch
+FROM debian:buster
 MAINTAINER Markus Lindenberg <markus@lindenberg.io>
 
 ENV DEBIAN_FRONTEND noninteractive
