@@ -158,6 +158,7 @@ The following arguments are provided to the `DynamicConfig` script for outgoing 
 * `TagLine: ACME` will assign a header string to be shown on the top of each page. This does not support format strings as used by HylaFAX; if defined a header string is always shown with the current timestamp and page number as set by SpanDSP.
 * `FAXNumber: 1337` will set the outgoing caller id number as used by FreeSWITCH when originating the call. 
 * `Gateway: somegw` or `Gateway: gw1,gw2` will set the [SIP Gateway](https://freeswitch.org/confluence/display/FREESWITCH/Gateways+Configuration) to use for sending the fax. The gateway has to be configured in FreeSWITCH. When multiple comma delimited gateways are given they will be tried in order. By default the gateway configured in GOFax.IP's configuration file is used.
+* `CallPrefix: 99` will be prefixed to the original destination number and override the parameter `callprefix` from gofax.conf
 
 ### Fallback from T.38 to SpanDSP softmodem
 

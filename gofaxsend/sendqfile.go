@@ -116,6 +116,10 @@ func SendQfile(qfilename string) (int, error) {
 			faxjob.Header = tagline
 		}
 
+		if prefix := dc.GetString("CallPrefix"); prefix != "" {
+			faxjob.Number = fmt.Sprint(prefix, qf.GetString("external"))
+		}
+
 		if faxnumber := dc.GetString("FAXNumber"); faxnumber != "" {
 			faxjob.Cidnum = faxnumber
 		}
