@@ -137,14 +137,14 @@ func (t *transmission) start() {
 	overrideRealm := fmt.Sprintf("override-%s", t.faxjob.Number)
 	overrides, err := gofaxlib.FreeSwitchDBList(t.conn, overrideRealm)
 	if err != nil {
-		if err.Error() != "no reply" {
+		if strings.TrimSpace(err.Error()) != "no reply" {
 			t.sessionlog.Log(err)
 		}
 	} else {
 		for _, varName := range overrides {
 			varValue, err := gofaxlib.FreeSwitchDBSelect(t.conn, overrideRealm, varName)
 			if err != nil {
-				if err.Error() != "no reply" {
+				if strings.TrimSpace(err.Error()) != "no reply" {
 					t.sessionlog.Log(err)
 				}
 			} else {
