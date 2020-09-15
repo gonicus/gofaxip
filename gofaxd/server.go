@@ -153,7 +153,7 @@ func (e *EventSocketServer) handler(c *eventsocket.Connection) {
 		}
 	}
 
-	sessionlog, err := gofaxlib.NewSessionLogger()
+	sessionlog, err := gofaxlib.NewSessionLogger(0)
 	if err != nil {
 		c.Send("exit")
 		logger.Logger.Print(err)

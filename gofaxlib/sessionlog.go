@@ -42,6 +42,7 @@ type SessionLogger interface {
 }
 
 type hylasessionlog struct {
+	jobid   uint
 	commseq uint64
 	commid  string
 
@@ -49,7 +50,7 @@ type hylasessionlog struct {
 }
 
 // NewSessionLogger assigns a CommID and opens a session log file
-func NewSessionLogger() (SessionLogger, error) {
+func NewSessionLogger(jobid uint) (SessionLogger, error) {
 	// Fetch commid and log file name
 	commseq, err := GetSeqFor(logDir)
 	if err != nil {
@@ -59,6 +60,7 @@ func NewSessionLogger() (SessionLogger, error) {
 	logfile := filepath.Join(logDir, fmt.Sprintf(logFileFormat, commid))
 
 	l := &hylasessionlog{
+		jobid:   jobid,
 		commseq: commseq,
 		commid:  commid,
 		logfile: logfile,
@@ -68,7 +70,11 @@ func NewSessionLogger() (SessionLogger, error) {
 }
 
 func (h *hylasessionlog) Log(v ...interface{}) {
-	logger.Logger.Println(v...)
+	if h.jobid != 0 {
+		logger.Logger.Println(append([]interface{}{fmt.Sprintf("(%d)", h.jobid)}, v))
+	} else {
+		logger.Logger.Println(v...)
+	}
 	if err := AppendLog(h.logfile, v...); err != nil {
 		logger.Logger.Print(err)
 	}

@@ -100,7 +100,7 @@ func SendQfile(qfilename string) (returned int, err error) {
 	}
 
 	// Start communication session and open logfile
-	sessionlog, err := gofaxlib.NewSessionLogger()
+	sessionlog, err := gofaxlib.NewSessionLogger(jobid)
 	if err != nil {
 		return
 	}
