@@ -269,6 +269,7 @@ StatusLoop:
 	}
 
 	xfl := &gofaxlib.XFRecord{}
+	xfl.Commid = sessionlog.CommID()
 	xfl.Modem = *deviceID
 	xfl.Jobid = uint(jobid)
 	xfl.Jobtag = qf.GetString("jobtag")

@@ -55,7 +55,6 @@ func (r *XFRecord) SetResult(result *FaxResult) {
 	if result != nil {
 		duration := result.EndTs.Sub(result.StartTs)
 		r.Ts = result.StartTs
-		r.Commid = result.sessionlog.CommID()
 		r.RemoteID = result.RemoteID
 		r.Params = EncodeParams(result.TransferRate, result.Ecm)
 		r.Pages = result.TransferredPages
