@@ -25,7 +25,6 @@ import (
 	"strings"
 
 	"github.com/gonicus/gofaxip/gofaxlib"
-	"github.com/gonicus/gofaxip/gofaxlib/logger"
 )
 
 const (
@@ -105,8 +104,7 @@ func SendQfile(qfilename string) (returned int, err error) {
 		return
 	}
 	qf.Set("commid", sessionlog.CommID())
-	logger.Logger.Println("Logging events for commid", sessionlog.CommID(), "to", sessionlog.Logfile())
-	sessionlog.Logf("Processing HylaFAX Job %d as %v", jobid, faxjob.UUID)
+	sessionlog.Logf("Processing hylafax commid %s as freeswitch call %v", sessionlog.CommID(), faxjob.UUID)
 
 	// Query DynamicConfig
 	if dcCmd := gofaxlib.Config.Gofaxsend.DynamicConfig; dcCmd != "" {
