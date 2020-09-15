@@ -84,8 +84,6 @@ func main() {
 
 		if err != nil {
 			logger.Logger.Printf("Error processing qfile %v: %v", qfilename, err)
-
-			// TODO: Checken, ob es korrekt ist, dass wir im Fehlerfall einer Transmission sendFailed setzen (statt sendRetry zb)
 			returned = sendFailed
 		}
 

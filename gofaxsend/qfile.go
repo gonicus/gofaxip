@@ -92,7 +92,6 @@ func (q *Qfile) Close() error {
 }
 
 // Write re-writes an opened queue file
-// TODO: Wie bei hylafax auch bestimmte felder (returned etc. immer beschrieben)
 func (q *Qfile) Write() error {
 	var err error
 
