@@ -71,7 +71,7 @@ func NewSessionLogger(jobid uint) (SessionLogger, error) {
 
 func (h *hylasessionlog) Log(v ...interface{}) {
 	if h.jobid != 0 {
-		logger.Logger.Println(append([]interface{}{fmt.Sprintf("(%d)", h.jobid)}, v))
+		logger.Logger.Println(append([]interface{}{fmt.Sprintf("(%d)", h.jobid)}, v)...)
 	} else {
 		logger.Logger.Println(v...)
 	}
