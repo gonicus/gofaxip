@@ -250,9 +250,8 @@ func (t *transmission) start() {
 			t.errorChan <- NewFaxError(err.Error(), true)
 			return
 		case kill := <-sigchan:
-			t.sessionlog.Logf("%v Received signal %v, destroying channel", t.faxjob.UUID, kill)
+			t.sessionlog.Logf("gofaxsend received signal %v, destroying freeswitch channel %v", kill, t.faxjob.UUID)
 			t.conn.Send(fmt.Sprintf("api uuid_kill %v", t.faxjob.UUID))
-			os.Remove(t.faxjob.Filename)
 			t.errorChan <- NewFaxError(fmt.Sprintf("Killed by signal %v", kill), false)
 		}
 	}
