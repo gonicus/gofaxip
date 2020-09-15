@@ -84,8 +84,16 @@ func main() {
 
 		if err != nil {
 			logger.Logger.Printf("Error processing qfile %v: %v", qfilename, err)
+
+			// TODO: Checken, ob es korrekt ist, dass wir im Fehlerfall einer Transmission sendFailed setzen (statt sendRetry zb)
+			returned = sendFailed
+		}
+
+		// When one job fails, ignore all other jobs and exit (same behaviour as faxsend)
+		if returned != sendDone {
 			break
 		}
+
 	}
 
 	gofaxlib.SendFIFO(devicefifo, "SR")

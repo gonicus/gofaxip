@@ -264,7 +264,8 @@ EventLoop:
 	}
 	sessionlog.Logf("Success: %v, Hangup Cause: %v, Result: %v", result.Success, result.Hangupcause, result.ResultText)
 
-	xfl := gofaxlib.NewXFRecord(result)
+	xfl := &gofaxlib.XFRecord{}
+	xfl.SetResult(result)
 	xfl.Modem = usedDevice
 	xfl.Filename = filename
 	xfl.Destnum = recipient

@@ -49,14 +49,11 @@ type FaxJob struct {
 }
 
 // NewFaxJob initializes a new Fax Job with a random UUID
-func NewFaxJob() (*FaxJob, error) {
-	jobUUID, err := uuid.NewRandom()
-	if err != nil {
-		return nil, err
-	}
+func NewFaxJob() *FaxJob {
+	jobUUID := uuid.New()
 
 	return &FaxJob{
 		UUID:   jobUUID,
 		UseECM: true,
-	}, nil
+	}
 }

@@ -50,26 +50,23 @@ type XFRecord struct {
 	Dcs      string
 }
 
-// NewXFRecord creates a new xferfaxlog record for a FaxResult
-func NewXFRecord(result *FaxResult) *XFRecord {
-	duration := result.EndTs.Sub(result.StartTs)
+// SetResult populates xferfaxlog record fields from a FaxResult
+func (r *XFRecord) SetResult(result *FaxResult) {
+	if result != nil {
+		duration := result.EndTs.Sub(result.StartTs)
+		r.Ts = result.StartTs
+		r.Commid = result.sessionlog.CommID()
+		r.RemoteID = result.RemoteID
+		r.Params = EncodeParams(result.TransferRate, result.Ecm)
+		r.Pages = result.TransferredPages
+		r.Jobtime = duration
+		r.Conntime = duration
+		r.Reason = result.ResultText
 
-	r := &XFRecord{
-		Ts:       result.StartTs,
-		Commid:   result.sessionlog.CommID(),
-		RemoteID: result.RemoteID,
-		Params:   EncodeParams(result.TransferRate, result.Ecm),
-		Pages:    result.TransferredPages,
-		Jobtime:  duration,
-		Conntime: duration,
-		Reason:   result.ResultText,
+		if len(result.PageResults) > 0 {
+			r.Dcs = result.PageResults[0].EncodingName
+		}
 	}
-
-	if len(result.PageResults) > 0 {
-		r.Dcs = result.PageResults[0].EncodingName
-	}
-
-	return r
 }
 
 func (r *XFRecord) formatTransmissionReport() string {
