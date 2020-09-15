@@ -137,12 +137,16 @@ func (t *transmission) start() {
 	overrideRealm := fmt.Sprintf("override-%s", t.faxjob.Number)
 	overrides, err := gofaxlib.FreeSwitchDBList(t.conn, overrideRealm)
 	if err != nil {
-		t.sessionlog.Log(err)
+		if err.Error() != "no reply" {
+			t.sessionlog.Log(err)
+		}
 	} else {
 		for _, varName := range overrides {
 			varValue, err := gofaxlib.FreeSwitchDBSelect(t.conn, overrideRealm, varName)
 			if err != nil {
-				t.sessionlog.Log(err)
+				if err.Error() != "no reply" {
+					t.sessionlog.Log(err)
+				}
 			} else {
 				t.sessionlog.Log(fmt.Sprintf("Overriding dialstring variable %s=%s", varName, varValue))
 				dsVariablesMap[varName] = varValue
