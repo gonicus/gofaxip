@@ -78,7 +78,6 @@ func LoadConfig(filename string) {
 	} else {
 		Config.Gofaxsend.FailedResponseMap = make(map[string]bool)
 		for _, i := range Config.Gofaxsend.FailedResponse {
-			logger.Logger.Print("adding failed response: ", i)
 			Config.Gofaxsend.FailedResponseMap[i] = true
 		}
 	}
@@ -86,10 +85,8 @@ func LoadConfig(filename string) {
 
 func FailedHangupcause(hangupcause string) bool {
 	if Config.Gofaxsend.FailedResponseMap[hangupcause] {
-		logger.Logger.Print(hangupcause, " is a final failed response!")
 		return true
 	} else {
-		logger.Logger.Print(hangupcause, " is not a final failed response!")
 		return false
 	}
 }
