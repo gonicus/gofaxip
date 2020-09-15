@@ -11,3 +11,4 @@ packaging/*.build
 packaging/*.buildinfo
 packaging/*.changes
 packaging/*.deb
+.vscode
