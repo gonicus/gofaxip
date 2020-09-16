@@ -17,7 +17,8 @@ GOfax.IP is designed to provide a standalone fax server together with HylaFAX an
 * Support for an arbitrary number of lines (depending on the used hardware)
 * Extensive logging and reporting: Writing `xferfaxlog` for sent/received faxes; Writing session log files for all sent/received faxes
 * Support for modem status reporting/querying using HylaFAX native tools and clients: `faxstat` etc.
-* Call screening using HylaFAX' `DynamicConfig`
+* Call screening for incoming faxes using HylaFAX' `DynamicConfig`
+* Call screening for outgoing faxes using GOfax.IP' `DynamicConfigOutgoing`
 
 ## Components
 
@@ -178,6 +179,23 @@ A transmission is regarded as failed and added to the fallback database if SpanD
 
 Normally the Displayname is populated with the content of the `sender` field from the qfile.
 If you dont want to expose this information you can use the parameter `cidname` in `gofax.conf` to set the Displayname to the Calleridnum or any static string.
+
+### Override transmission parameters for individual destinations
+
+It is possible to override transmission parameters for individual destinations by inserting entries to FreeSWITCHs internal database (mod_db).
+Before originating the transmission, `gofaxsend` checks if a matching database entry exists. The realm is *override-$destination*, where $destination is the target number.
+The found keys are used as parameters for the outgoing channel of FreeSWITCH.
+
+Example:
+
+Disable T.38 transmission for destination 012345:
+```
+fs_cli -x 'db insert/override-012345/fax_enable_t38/false'
+```
+
+See https://freeswitch.org/confluence/display/FREESWITCH/mod_spandsp#mod_spandsp-Controllingtheapp for mod_spandsp parameters.
+
+See https://freeswitch.org/confluence/display/FREESWITCH/mod_db for a reference on how to use mod_db.
 
 # Building
 
