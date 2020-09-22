@@ -33,6 +33,10 @@ const (
 	sendFailed
 	sendDone
 	sendReformat
+	sendV34fail
+	sendV17fail
+	sendBatchfail
+	sendNobatch
 )
 
 // SendQfile immediately tries to send the given qfile using FreeSWITCH

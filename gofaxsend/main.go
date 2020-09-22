@@ -71,30 +71,27 @@ func main() {
 		log.Fatal(usage)
 	}
 
+	qfilename := flag.Arg(0)
+	if qfilename == "" {
+		logger.Logger.Println("No qfile provided on command line")
+		os.Exit(sendFailed)
+	}
+
 	gofaxlib.LoadConfig(*configFile)
-
-	var err error
-	returned := 1 // Exit code
-
 	devicefifo := filepath.Join(gofaxlib.Config.Hylafax.Spooldir, fifoPrefix+*deviceID)
 	gofaxlib.SendFIFO(devicefifo, "SB")
 
-	for _, qfilename := range flag.Args() {
-		returned, err = SendQfile(qfilename)
-
-		if err != nil {
-			logger.Logger.Printf("Error processing qfile %v: %v", qfilename, err)
-			returned = sendFailed
-		}
-
-		// When one job fails, ignore all other jobs and exit (same behaviour as faxsend)
-		if returned != sendDone {
-			break
-		}
-
+	returned, err := SendQfile(qfilename)
+	if err != nil {
+		logger.Logger.Printf("Error processing qfile %v: %v", qfilename, err)
+		returned = sendFailed
 	}
 
 	gofaxlib.SendFIFO(devicefifo, "SR")
+
+	if len(flag.Args()) > 1 {
+		logger.Logger.Println("Batching not supported, only the first of multiple jobs was processed. Please set 'MaxBatchJobs: 1' in /etc/hylafax/config")
+	}
 
 	logger.Logger.Print("Exiting with status ", returned)
 	os.Exit(returned)
