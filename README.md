@@ -93,6 +93,12 @@ To make HylaFAX use `gofaxsend` for sending, the `SendFaxCmd` option has to be a
 
 ```
 SendFaxCmd:		"/usr/bin/gofaxsend"
+
+```
+
+As sending batches of multiple jobs in one transmission is not supported by mod_spandsp, it is recommended to disable Hylafax' Batchmode in `/etc/hylafax/config`:
+```
+MaxBatchJobs:		1
 ```
 
 A sample `FaxDispatch` script is included in `/usr/share/doc/gofaxip/examples/hylafax/FaxDispatch`, the available `CALLID` values set by `gofaxd` are documented there.
