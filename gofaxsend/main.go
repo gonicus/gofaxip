@@ -90,7 +90,7 @@ func main() {
 	gofaxlib.SendFIFO(devicefifo, "SR")
 
 	if len(flag.Args()) > 1 {
-		logger.Logger.Println("Batching not supported, only the first of multiple jobs was processed. Please set 'MaxBatchJobs: 1' in /etc/hylafax/config")
+		logger.Logger.Println("Batching not supported, only the first job was processed, all other jobs will be requeued. Please set 'MaxBatchJobs: 1' in /etc/hylafax/config")
 	}
 
 	logger.Logger.Print("Exiting with status ", returned)
