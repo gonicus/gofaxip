@@ -23,6 +23,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gonicus/gofaxip/gofaxlib"
 )
@@ -209,6 +210,7 @@ func SendQfile(qfilename string) (returned int, err error) {
 	returned = sendRetry
 
 	// Start transmission goroutine
+	transmitTs := time.Now()
 	t := transmit(*faxjob, sessionlog)
 	var result *gofaxlib.FaxResult
 	var status string
@@ -289,6 +291,8 @@ StatusLoop:
 	} else {
 		sessionlog.Logf("Call failed. Retry: %v. Result: %v", returned == sendRetry, status)
 		xfl.Reason = status
+		xfl.Ts = transmitTs
+		xfl.Jobtime = time.Now().Sub(transmitTs)
 	}
 
 	if err = xfl.SaveTransmissionReport(); err != nil {
