@@ -261,6 +261,8 @@ StatusLoop:
 			status = faxerr.Error()
 			if faxerr.Retry() {
 				returned = sendRetry
+			} else {
+				returned = sendFailed
 			}
 			break StatusLoop
 		}
