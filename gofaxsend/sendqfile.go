@@ -15,7 +15,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-package main
+package gofaxsend
 
 import (
 	"fmt"
@@ -30,27 +30,33 @@ import (
 
 const (
 	// Return codes for Hylafax.
-	sendRetry = iota
-	sendFailed
-	sendDone
-	sendReformat
-	sendV34fail
-	sendV17fail
-	sendBatchfail
-	sendNobatch
+	SendRetry SendResult = iota
+	SendFailed
+	SendDone
+	SendReformat
+	SendV34fail
+	SendV17fail
+	SendBatchfail
+	SendNobatch
 )
 
-// SendQfile immediately tries to send the given qfile using FreeSWITCH
-func SendQfile(qfilename string) (returned int, err error) {
-	returned = sendFailed
+type SendResult int
 
+// SendQfileFromDisk reads the qfile from disk and then immediately tries to send the given qfile using FreeSWITCH
+func SendQfileFromDisk(filename, deviceID string) (SendResult, error) {
 	// Open qfile
-	qf, err := OpenQfile(qfilename)
+	qf, err := OpenQfile(filename)
 	if err != nil {
-		err = fmt.Errorf("Cannot open qfile %v: %v", qfilename, err)
-		return
+		return SendFailed, fmt.Errorf("cannot open qfile %v: %w", filename, err)
 	}
 	defer qf.Close()
+
+	return SendQfile(qf, deviceID)
+}
+
+// SendQfile immediately tries to send the given qfile using FreeSWITCH
+func SendQfile(qf *Qfile, deviceID string) (returned SendResult, err error) {
+	returned = SendFailed
 
 	var jobid uint
 	if jobidstr := qf.GetString("jobid"); jobidstr != "" {
@@ -114,29 +120,29 @@ func SendQfile(qfilename string) (returned int, err error) {
 	// Query DynamicConfig
 	if dcCmd := gofaxlib.Config.Gofaxsend.DynamicConfig; dcCmd != "" {
 		sessionlog.Log("Calling DynamicConfig script", dcCmd)
-		dc, err := gofaxlib.DynamicConfig(dcCmd, *deviceID, qf.GetString("owner"), qf.GetString("number"), fmt.Sprint(jobid))
+		dc, err := gofaxlib.DynamicConfig(dcCmd, deviceID, qf.GetString("owner"), qf.GetString("number"), fmt.Sprint(jobid))
 		if err != nil {
 			errmsg := fmt.Sprintln("Error calling DynamicConfig:", err)
 			sessionlog.Log(errmsg)
-			qf.Set("returned", strconv.Itoa(sendRetry))
+			qf.Set("returned", strconv.Itoa(int(SendRetry)))
 			qf.Set("status", errmsg)
 			if err = qf.Write(); err != nil {
 				sessionlog.Logf("Error updating qfile:", err)
 			}
 			// Retry, as this is an internal error executing the DynamicConfig script which could recover later
-			return sendRetry, nil
+			return SendRetry, nil
 		}
 
 		// Check if call should be rejected
 		if gofaxlib.DynamicConfigBool(dc.GetString("RejectCall")) {
 			errmsg := "Transmission rejected by DynamicConfig"
 			sessionlog.Log(errmsg)
-			qf.Set("returned", strconv.Itoa(sendFailed))
+			qf.Set("returned", strconv.Itoa(int(SendFailed)))
 			qf.Set("status", errmsg)
 			if err = qf.Write(); err != nil {
 				sessionlog.Logf("Error updating qfile:", err)
 			}
-			return sendFailed, nil
+			return SendFailed, nil
 		}
 
 		// Check if a custom identifier should be set
@@ -204,10 +210,10 @@ func SendQfile(qfilename string) (returned int, err error) {
 	qf.Set("totdials", strconv.Itoa(totdials))
 	if err = qf.Write(); err != nil {
 		sessionlog.Log("Error updating qfile:", err)
-		return sendFailed, nil
+		return SendFailed, nil
 	}
 	// Default: Retry when transmission fails
-	returned = sendRetry
+	returned = SendRetry
 
 	// Start transmission goroutine
 	transmitTs := time.Now()
@@ -235,7 +241,7 @@ StatusLoop:
 				// Fax Finished
 				status = result.ResultText
 				if result.Success {
-					returned = sendDone
+					returned = SendDone
 				}
 				break StatusLoop
 			}
@@ -260,23 +266,23 @@ StatusLoop:
 			qf.Set("ndials", strconv.Itoa(ndials))
 			status = faxerr.Error()
 			if faxerr.Retry() {
-				returned = sendRetry
+				returned = SendRetry
 			} else {
-				returned = sendFailed
+				returned = SendFailed
 			}
 			break StatusLoop
 		}
 	}
 
 	qf.Set("status", status)
-	qf.Set("returned", strconv.Itoa(returned))
+	qf.Set("returned", strconv.Itoa(int(returned)))
 	if err = qf.Write(); err != nil {
 		sessionlog.Log("Error updating qfile:", err)
 	}
 
 	xfl := &gofaxlib.XFRecord{}
 	xfl.Commid = sessionlog.CommID()
-	xfl.Modem = *deviceID
+	xfl.Modem = deviceID
 	xfl.Jobid = uint(jobid)
 	xfl.Jobtag = qf.GetString("jobtag")
 	xfl.Sender = qf.GetString("mailaddr")
@@ -287,11 +293,11 @@ StatusLoop:
 		if result.Success {
 			sessionlog.Logf("Fax sent successfully. Hangup Cause: %v. Result: %v", result.Hangupcause, status)
 		} else {
-			sessionlog.Logf("Fax failed. Retry: %v. Hangup Cause: %v. Result: %v", returned == sendRetry, result.Hangupcause, status)
+			sessionlog.Logf("Fax failed. Retry: %v. Hangup Cause: %v. Result: %v", returned == SendRetry, result.Hangupcause, status)
 		}
 		xfl.SetResult(result)
 	} else {
-		sessionlog.Logf("Call failed. Retry: %v. Result: %v", returned == sendRetry, status)
+		sessionlog.Logf("Call failed. Retry: %v. Result: %v", returned == SendRetry, status)
 		xfl.Reason = status
 		xfl.Ts = transmitTs
 		xfl.Jobtime = time.Now().Sub(transmitTs)
