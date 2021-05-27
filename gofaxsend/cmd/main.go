@@ -26,6 +26,7 @@ import (
 
 	"github.com/gonicus/gofaxip/gofaxlib"
 	"github.com/gonicus/gofaxip/gofaxlib/logger"
+	"github.com/gonicus/gofaxip/gofaxsend"
 )
 
 const (
@@ -73,18 +74,17 @@ func main() {
 
 	qfilename := flag.Arg(0)
 	if qfilename == "" {
-		logger.Logger.Println("No qfile provided on command line")
-		os.Exit(sendFailed)
+		logger.Logger.Fatalln("No qfile provided on command line")
 	}
 
 	gofaxlib.LoadConfig(*configFile)
 	devicefifo := filepath.Join(gofaxlib.Config.Hylafax.Spooldir, fifoPrefix+*deviceID)
 	gofaxlib.SendFIFO(devicefifo, "SB")
 
-	returned, err := SendQfile(qfilename)
+	returned, err := gofaxsend.SendQfileFromDisk(qfilename, *deviceID)
 	if err != nil {
 		logger.Logger.Printf("Error processing qfile %v: %v", qfilename, err)
-		returned = sendFailed
+		returned = gofaxsend.SendFailed
 	}
 
 	gofaxlib.SendFIFO(devicefifo, "SR")
@@ -94,5 +94,5 @@ func main() {
 	}
 
 	logger.Logger.Print("Exiting with status ", returned)
-	os.Exit(returned)
+	os.Exit(int(returned))
 }
