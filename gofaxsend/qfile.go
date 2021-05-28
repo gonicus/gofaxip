@@ -37,6 +37,16 @@ type param struct {
 	Value string
 }
 
+// A Qfiler handles parameters to communicate with HylaFAX
+type Qfiler interface {
+	Write() error
+	GetAll(tag string) []string
+	GetString(tag string) string
+	GetInt(tag string) (int, error)
+	Set(tag, value string)
+	Add(tag, value string)
+}
+
 // Qfile is a HylaFAX queue file
 type Qfile struct {
 	filename string
@@ -147,20 +157,22 @@ func (q *Qfile) GetInt(tag string) (int, error) {
 	if str := q.GetString(tag); str != "" {
 		return strconv.Atoi(str)
 	}
-	return 0, errors.New("Tag not found")
+	return 0, errors.New("tag not found")
 }
 
 // Set replaces the value of the first found param
 // with given value.
 // If the param does not exist, it is appended.
-func (q *Qfile) Set(tag string, value string) error {
+func (q *Qfile) Set(tag string, value string) {
 	for i, param := range q.params {
 		if param.Tag == tag {
 			q.params[i].Value = value
-			return nil
+			return
 		}
 	}
-	return errors.New("Tag not found")
+
+	// If we haven't been able to update it, add it instead.
+	q.Add(tag, value)
 }
 
 // Add adds a param with given tag and value. If the
