@@ -55,7 +55,7 @@ func SendQfileFromDisk(filename, deviceID string) (SendResult, error) {
 }
 
 // SendQfile immediately tries to send the given qfile using FreeSWITCH
-func SendQfile(qf *Qfile, deviceID string) (returned SendResult, err error) {
+func SendQfile(qf Qfiler, deviceID string) (returned SendResult, err error) {
 	returned = SendFailed
 
 	var jobid uint
