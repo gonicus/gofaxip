@@ -32,14 +32,23 @@ We recommend running GOfax.IP on Debian 10 ("Buster"), so these instructions cov
 
 ### Dependencies
 
-The official FreeSWITCH Debian repository can be used to obtain and install all required FreeSWITCH packages.
+The official FreeSWITCH Debian repository can be used to obtain and install all required FreeSWITCH packages. First you need to create a Signalwire API Token, you need it to use the Debian Repo. Follow this guide: https://freeswitch.org/confluence/display/FREESWITCH/HOWTO+Create+a+SignalWire+Personal+Access+Token
 
-Adding the repository:
+
+After you created the api token you can continue with adding the repository
 
 ```
+TOKEN=YOURSIGNALWIRETOKEN
+ 
 apt-get update && apt-get install -y gnupg2 wget lsb-release
-wget -O - https://files.freeswitch.org/repo/deb/debian-release/fsstretch-archive-keyring.asc | apt-key add -
-echo "deb http://files.freeswitch.org/repo/deb/debian-release/ `lsb_release -sc` main" > /etc/apt/sources.list.d/freeswitch.list
+ 
+wget --http-user=signalwire --http-password=$TOKEN -O /usr/share/keyrings/signalwire-freeswitch-repo.gpg https://freeswitch.signalwire.com/repo/deb/debian-release/signalwire-freeswitch-repo.gpg
+ 
+echo "machine freeswitch.signalwire.com login signalwire password $TOKEN" > /etc/apt/auth.conf
+echo "deb [signed-by=/usr/share/keyrings/signalwire-freeswitch-repo.gpg] https://freeswitch.signalwire.com/repo/deb/debian-release/ `lsb_release -sc` main" > /etc/apt/sources.list.d/freeswitch.list
+echo "deb-src [signed-by=/usr/share/keyrings/signalwire-freeswitch-repo.gpg] https://freeswitch.signalwire.com/repo/deb/debian-release/ `lsb_release -sc` main" >> /etc/apt/sources.list.d/freeswitch.list
+ 
+apt-get update
 ```
 
 ### Installing packages
