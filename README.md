@@ -141,7 +141,7 @@ As the _virtual modems_ visible in HylaFAX are not tied to preconfigured lines b
 ### DynamicConfig for incoming faxes
 
 `DynamicConfig` as used and documented in HylaFAX can be used by GOfax.IP. 
-One option per line can be set, comments are note allowed. 
+One option per line can be set, comments are not allowed. 
 
 **Parameters**
 The following arguments are provided to the `DynamicConfig` script for incoming faxes:
