@@ -59,7 +59,15 @@ func init() {
 	}
 }
 
+func logPanic() {
+	if r := recover(); r != nil {
+		logger.Logger.Print(r)
+		panic(r)
+	}
+}
+
 func main() {
+	defer logPanic()
 	flag.Parse()
 
 	if *showVersion {
