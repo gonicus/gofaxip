@@ -28,11 +28,11 @@ GOfax.IP consists of two commands that replace their native HylaFAX conterparts
 
 ## Installation
 
-We recommend running GOfax.IP on Debian 10 ("Buster"), so these instructions cover Debian in detail. Of course it is possible to install and use GOfax.IP on other Linux distributions and possibly other Unixes supported by golang, FreeSWITCH and HylaFAX.
+We recommend running GOfax.IP on Debian 12 ("bookworm"), so these instructions cover Debian in detail. Of course it is possible to install and use GOfax.IP on other Linux distributions and possibly other Unixes supported by golang, FreeSWITCH and HylaFAX.
 
 ### Dependencies
 
-The official FreeSWITCH Debian repository can be used to obtain and install all required FreeSWITCH packages. First you need to create a Signalwire API Token, you need it to use the Debian Repo. Follow this guide: https://freeswitch.org/confluence/display/FREESWITCH/HOWTO+Create+a+SignalWire+Personal+Access+Token
+The official FreeSWITCH Debian repository can be used to obtain and install all required FreeSWITCH packages. To access the Repo, you first need to create a Signalwire API Token. Follow this guide: https://freeswitch.org/confluence/display/FREESWITCH/HOWTO+Create+a+SignalWire+Personal+Access+Token
 
 
 After you created the api token you can continue with adding the repository
@@ -74,8 +74,8 @@ This is only necessary if you want to use the latest/untested version or if you 
 FreeSWITCH has to be able to place received faxes in HylaFAX' `recvq` spool. The simplest way to achieve this is to run FreeSWITCH as the `uucp` user. 
 
 ```
-sudo chown -R uucp.uucp /var/log/freeswitch
-sudo chown -R uucp.uucp /var/lib/freeswitch
+sudo chown -R uucp:uucp /var/log/freeswitch
+sudo chown -R uucp:uucp /var/lib/freeswitch
 sudo cp /usr/share/doc/gofaxip/examples/freeswitch.service /etc/systemd/system/
 sudo systemctl daemon-reload
 ```
@@ -125,9 +125,7 @@ sudo touch /var/spool/hylafax/etc/config.freeswitch{0..4}
 ### Starting
 
 ```
-sudo systemctl start freeswitch
-sudo systemctl start gofaxip
-sudo systemctl restart hylafax
+sudo systemctl restart freeswitch hylafax gofaxip hfaxd faxq
 ```
 
 ### Logging 
