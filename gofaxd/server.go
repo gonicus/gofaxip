@@ -22,6 +22,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strconv"
 
 	"github.com/gonicus/gofaxip/gofaxlib"
@@ -51,6 +52,20 @@ func NewEventSocketServer() *EventSocketServer {
 	e.killChan = make(chan struct{})
 	return e
 }
+
+func getNumberFromSIPURI(uri string) (string, error) {
+	re := regexp.MustCompile(`sip:(\d+)@`)
+
+	matches := re.FindStringSubmatch(uri)
+
+	if len(matches) < 2 {
+		return "", fmt.Errorf("Rufnummer konnte nicht extrahiert werden")
+	}
+
+	rufnummer := matches[1]
+	return rufnummer, nil
+}
+
 
 // Start starts a goroutine to listen for ESL connections and handle incoming calls
 func (e *EventSocketServer) Start() {
@@ -101,11 +116,23 @@ func (e *EventSocketServer) handler(c *eventsocket.Connection) {
 	c.Send("event plain CHANNEL_CALLSTATE CUSTOM spandsp::rxfaxnegociateresult spandsp::rxfaxpageresult spandsp::rxfaxresult")
 
 	// Extract Caller/Callee
+	var recipient string
+	if gofaxlib.Config.Gofaxd.RecipientFromDiversionHeader {
+		recipient, err = getNumberFromSIPURI(connectev.Get("Variable_sip_h_diversion"))
+		if err != nil {
+			logger.Logger.Println(err)
+			c.Execute("respond", "404", true)
+			c.Send("exit")
+			return
+		}
+	} else {
+		recipient = connectev.Get("Variable_sip_to_user")
+	}
+
 	gateway := connectev.Get("Variable_sip_gateway")
-	recipient := connectev.Get("Variable_sip_to_user")
 	cidname := connectev.Get("Channel-Caller-Id-Name")
 	cidnum := connectev.Get("Channel-Caller-Id-Number")
-
+	
 	logger.Logger.Printf("Incoming call to %v from %v <%v> via gateway %v", recipient, cidname, cidnum, gateway)
 
 	var device *Device
