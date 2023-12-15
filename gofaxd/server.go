@@ -66,7 +66,6 @@ func getNumberFromSIPURI(uri string) (string, error) {
 	return number, nil
 }
 
-
 // Start starts a goroutine to listen for ESL connections and handle incoming calls
 func (e *EventSocketServer) Start() {
 	go func() {
@@ -132,7 +131,7 @@ func (e *EventSocketServer) handler(c *eventsocket.Connection) {
 	gateway := connectev.Get("Variable_sip_gateway")
 	cidname := connectev.Get("Channel-Caller-Id-Name")
 	cidnum := connectev.Get("Channel-Caller-Id-Number")
-	
+
 	logger.Logger.Printf("Incoming call to %v from %v <%v> via gateway %v", recipient, cidname, cidnum, gateway)
 
 	var device *Device

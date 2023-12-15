@@ -46,15 +46,15 @@ type config struct {
 		Xferfaxlog string
 	}
 	Gofaxd struct {
-		EnableT38              			bool
-		RequestT38             			bool
-		RecipientFromDiversionHeader 	bool
-		Socket                 			string
-		Answerafter            			uint64
-		Waittime               			uint64
-		FaxRcvdCmd             			string
-		DynamicConfig          			string
-		AllocateInboundDevices 			bool
+		EnableT38                    bool
+		RequestT38                   bool
+		RecipientFromDiversionHeader bool
+		Socket                       string
+		Answerafter                  uint64
+		Waittime                     uint64
+		FaxRcvdCmd                   string
+		DynamicConfig                string
+		AllocateInboundDevices       bool
 	}
 	Gofaxsend struct {
 		EnableT38            bool
