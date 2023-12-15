@@ -62,8 +62,8 @@ func getNumberFromSIPURI(uri string) (string, error) {
 		return "", fmt.Errorf("Number could not be extracted from SIP URI")
 	}
 
-	rufnummer := matches[1]
-	return rufnummer, nil
+	number := matches[1]
+	return number, nil
 }
 
 
