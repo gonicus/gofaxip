@@ -59,7 +59,7 @@ func getNumberFromSIPURI(uri string) (string, error) {
 	matches := re.FindStringSubmatch(uri)
 
 	if len(matches) < 2 {
-		return "", fmt.Errorf("Rufnummer konnte nicht extrahiert werden")
+		return "", fmt.Errorf("Number could not be extracted from SIP URI")
 	}
 
 	rufnummer := matches[1]
