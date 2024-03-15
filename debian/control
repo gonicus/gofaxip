@@ -6,7 +6,6 @@ Uploaders: Markus Lindenberg <lindenberg@gonicus.de>
 Build-Depends: debhelper (>= 9),
                dh-golang,
                golang-go,
-               dh-systemd (>= 1.5)
 Standards-Version: 3.9.7
 Homepage: https://github.com/gonicus/gofaxip
 XS-Go-Import-Path: github.com/gonicus/gofaxip
