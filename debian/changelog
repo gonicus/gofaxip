@@ -1,3 +1,12 @@
+gofaxip (1.4-1) unstable; urgency=medium
+
+  * allow extraction of recipient from SIP Diversion Header
+  * improve logging
+  * adapt to hylafax changes from Debian 12
+  * allow configuration of final hangupcauses
+
+ -- Sebastian Denz <denz@gonicus.de>  Fri, 15 Mar 2024 09:03:57 +0100
+
 gofaxip (1.3-1) unstable; urgency=medium
 
   * allow prefix overriding from dynamicconfigoutgoing
