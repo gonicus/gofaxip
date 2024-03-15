@@ -117,7 +117,7 @@ To have `faxstat` show modem/channel usage in it's status output, a modem config
 If `/etc/gofax.conf` is configured to manage 5 (virtual) modems, you have to create the (empty) configuration files manually:
 
 ```
-sudo touch /var/spool/hylafax/etc/config.freeswitch{0..4}
+sudo touch /etc/hylafax/config.freeswitch{0..4}
 ```
 
 ## Operation
