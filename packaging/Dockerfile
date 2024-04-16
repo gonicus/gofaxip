@@ -1,5 +1,4 @@
 FROM debian:bookworm
-MAINTAINER Markus Lindenberg <markus@lindenberg.io>
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV DEBIAN_PRIORITY critical
