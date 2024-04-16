@@ -1,5 +1,4 @@
-FROM debian:buster
-MAINTAINER Markus Lindenberg <markus@lindenberg.io>
+FROM debian:bookworm
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV DEBIAN_PRIORITY critical
