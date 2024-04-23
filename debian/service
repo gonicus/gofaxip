@@ -6,6 +6,7 @@ After=network.target local-fs.target
 User=uucp
 ExecStart=/usr/bin/gofaxd
 BindPaths=/etc/hylafax:/var/spool/hylafax/etc
+WorkingDirectory=/var/spool/hylafax
 Restart=always
 
 [Install]
