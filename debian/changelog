@@ -1,3 +1,9 @@
+gofaxip (1.4-2) unstable; urgency=medium
+
+  * Set WorkingDirectory for gofaxd for Debian 12
+
+ -- Sebastian Denz <denz@gonicus.de>  Tue, 23 Apr 2024 11:53:58 +0200
+
 gofaxip (1.4-1) unstable; urgency=medium
 
   * allow extraction of recipient from SIP Diversion Header
