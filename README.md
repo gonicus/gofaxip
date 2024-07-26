@@ -28,6 +28,9 @@ GOfax.IP consists of two commands that replace their native HylaFAX conterparts
 
 We recommend running GOfax.IP on Debian 12 ("bookworm"), so these instructions cover Debian in detail. Of course it is possible to install and use GOfax.IP on other Linux distributions and possibly other Unixes supported by golang, FreeSWITCH and HylaFAX.
 
+Due to https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1076953 the current Hylafax Packages in 12 will stop working after executing the provided cronjobs `/etc/cron.weekly/hylafax` and `/etc/cron.monthly/hylafax`.
+You can use `debian12_workaround.sh` from this repository to workaround that issue. This script has to be executed once after installing Hylafax packages.
+
 ### Dependencies
 
 The official FreeSWITCH Debian repository can be used to obtain and install all required FreeSWITCH packages. To access the Repo, you first need to create a Signalwire API Token. Follow this guide: https://freeswitch.org/confluence/display/FREESWITCH/HOWTO+Create+a+SignalWire+Personal+Access+Token
