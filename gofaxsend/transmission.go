@@ -66,6 +66,14 @@ func (t *transmission) Result() <-chan *gofaxlib.FaxResult {
 	return t.resultChan
 }
 
+// Kill sends a uuid_kill command to FreeSWITCH to terminate the channel
+func (t *transmission) Kill() {
+	if t.conn != nil {
+		t.sessionlog.Logf("Killing FreeSWITCH channel %v", t.faxjob.UUID)
+		t.conn.Send(fmt.Sprintf("api uuid_kill %v", t.faxjob.UUID))
+	}
+}
+
 // Connect to FreeSWITCH and originate a txfax
 func (t *transmission) start() {
 
@@ -251,7 +259,7 @@ func (t *transmission) start() {
 			return
 		case kill := <-sigchan:
 			t.sessionlog.Logf("gofaxsend received signal %v, destroying freeswitch channel %v", kill, t.faxjob.UUID)
-			t.conn.Send(fmt.Sprintf("api uuid_kill %v", t.faxjob.UUID))
+			t.Kill()
 			t.errorChan <- NewFaxError(fmt.Sprintf("Killed by signal %v", kill), false)
 		}
 	}
