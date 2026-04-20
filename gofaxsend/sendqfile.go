@@ -221,11 +221,26 @@ func SendQfile(qf Qfiler, deviceID string) (returned SendResult, err error) {
 	var result *gofaxlib.FaxResult
 	var status string
 
+	// Set up page timeout if configured
+	var timeoutChan <-chan time.Time
+	pageTimeout := time.Duration(gofaxlib.Config.Gofaxsend.PageTimeout) * time.Second
+	var timer *time.Timer
+	if pageTimeout > 0 {
+		timer = time.NewTimer(pageTimeout)
+		timeoutChan = timer.C
+		defer timer.Stop()
+	}
+
 	// Wait for events
+	var pagesSent uint
 StatusLoop:
 	for {
 		select {
 		case page := <-t.PageSent():
+			if timer != nil {
+				timer.Reset(pageTimeout)
+			}
+			pagesSent = uint(page.Page)
 			qf.Set("npages", strconv.Itoa(int(page.Page)))
 			qf.Set("dataformat", page.EncodingName)
 			if err = qf.Write(); err != nil {
@@ -233,6 +248,9 @@ StatusLoop:
 			}
 
 		case result = <-t.Result():
+			if timer != nil {
+				timer.Reset(pageTimeout)
+			}
 			qf.Set("signalrate", strconv.Itoa(int(result.TransferRate)))
 			qf.Set("csi", result.RemoteID)
 
@@ -269,6 +287,20 @@ StatusLoop:
 				returned = SendRetry
 			} else {
 				returned = SendFailed
+			}
+			break StatusLoop
+
+		case <-timeoutChan:
+			sessionlog.Logf("Page timeout (%v) reached, killing channel", pageTimeout)
+			t.Kill()
+			totpages, _ := qf.GetInt("totpages")
+			if totpages > 0 && pagesSent >= uint(totpages) {
+				sessionlog.Logf("All %d pages were sent, treating as successful", pagesSent)
+				status = fmt.Sprintf("Timeout after all %d pages sent, channel killed", pagesSent)
+				returned = SendDone
+			} else {
+				status = fmt.Sprintf("Timeout after %d/%d pages, channel killed", pagesSent, totpages)
+				returned = SendRetry
 			}
 			break StatusLoop
 		}

@@ -64,6 +64,7 @@ type config struct {
 		DynamicConfig        string
 		DisableV17AfterRetry string
 		DisableECMAfterRetry string
+		PageTimeout          uint
 		CidName              string
 		FailedResponse       []string
 		FailedResponseMap    map[string]bool
