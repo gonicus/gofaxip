@@ -137,7 +137,7 @@ func (e *EventSocketServer) handler(c *eventsocket.Connection) {
 	var device *Device
 	if gofaxlib.Config.Gofaxd.AllocateInboundDevices {
 		// Find free device
-		device, err := devmanager.FindDevice(fmt.Sprintf("Receiving facsimile"))
+		device, err := devmanager.FindDevice("Receiving facsimile")
 		if err != nil {
 			logger.Logger.Println(err)
 			c.Execute("respond", "404", true)
@@ -155,6 +155,8 @@ func (e *EventSocketServer) handler(c *eventsocket.Connection) {
 	}
 
 	csi := gofaxlib.Config.Freeswitch.Ident
+	useEcm := true
+	disableV17 := false
 
 	// Query DynamicConfig
 	if dcCmd := gofaxlib.Config.Gofaxd.DynamicConfig; dcCmd != "" {
@@ -176,6 +178,12 @@ func (e *EventSocketServer) handler(c *eventsocket.Connection) {
 				csi = dynamicCsi
 			}
 
+			if param := dc.GetString("use-ecm"); param != "" {
+				useEcm = gofaxlib.DynamicConfigBool(param)
+			}
+			if param := dc.GetString("disable-v17"); param != "" {
+				disableV17 = gofaxlib.DynamicConfigBool(param)
+			}
 		}
 	}
 
@@ -239,6 +247,8 @@ func (e *EventSocketServer) handler(c *eventsocket.Connection) {
 
 	c.Execute("set", fmt.Sprintf("fax_enable_t38=%s", strconv.FormatBool(enableT38)), true)
 	c.Execute("set", fmt.Sprintf("fax_enable_t38_request=%s", strconv.FormatBool(requestT38)), true)
+	c.Execute("set", fmt.Sprintf("fax_disable_v17=%s", strconv.FormatBool(disableV17)), true)
+	c.Execute("set", fmt.Sprintf("fax_use_ecm=%s", strconv.FormatBool(useEcm)), true)
 	c.Execute("set", fmt.Sprintf("fax_ident=%s", csi), true)
 	c.Execute("rxfax", filenameAbs, true)
 	c.Execute("hangup", "", true)
@@ -346,6 +356,13 @@ EventLoop:
 	extraEnv := []string{
 		fmt.Sprintf("HANGUPCAUSE=%s", result.Hangupcause),
 		fmt.Sprintf("TRANSFER_RATE=%d", result.TransferRate),
+		fmt.Sprintf("TRANSFERRED_PAGES=%d", result.TransferredPages),
+		fmt.Sprintf("TOTAL_PAGES=%d", result.TotalPages),
+		fmt.Sprintf("ECM=%s", strconv.FormatBool(result.Ecm)),
+		fmt.Sprintf("UUID=%s", channelUUID),
+		fmt.Sprintf("TIME_START=%d", result.StartTs.Unix()),
+		fmt.Sprintf("TIME_END=%d", result.EndTs.Unix()),
+		fmt.Sprintf("REMOTE_STATION_ID=%s", result.RemoteID),
 	}
 	cmd.Env = append(os.Environ(), extraEnv...)
 	sessionlog.Log("Calling", cmd.Path, cmd.Args)
@@ -356,5 +373,4 @@ EventLoop:
 		sessionlog.Log(cmd.Path, "ended successfully")
 	}
 
-	return
 }
