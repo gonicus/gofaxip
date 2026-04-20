@@ -154,6 +154,8 @@ The following arguments are provided to the `DynamicConfig` script for incoming 
 **Supported options**
 * `RejectCall: true` will reject the call. Default is to allow the call
 * `LocalIdentifier: +1 234 567` will assign a CSI (Called Station Identifier) that will be used for this fax reception. The Default CSI can be set in `gofax.conf` in the `ident` parameter.
+* `use-ecm: false` will disable ECM (Error Correction Mode) for this fax reception. Default is `true`.
+* `disable-v17: true` will disable V.17 modulation for this fax reception, forcing a slower but more robust mode. Default is `false`.
 
 ### DynamicConfig for outgoing faxes
 
@@ -174,6 +176,20 @@ The following arguments are provided to the `DynamicConfig` script for outgoing 
 * `FAXNumber: 1337` will set the outgoing caller id number as used by FreeSWITCH when originating the call. 
 * `Gateway: somegw` or `Gateway: gw1,gw2` will set the [SIP Gateway](https://freeswitch.org/confluence/display/FREESWITCH/Gateways+Configuration) to use for sending the fax. The gateway has to be configured in FreeSWITCH. When multiple comma delimited gateways are given they will be tried in order. By default the gateway configured in GOFax.IP's configuration file is used.
 * `CallPrefix: 99` will be prefixed to the original destination number and override the parameter `callprefix` from gofax.conf
+
+### Environment variables for `faxrcvd`
+
+When a fax has been received, `gofaxd` invokes HylaFAX' `faxrcvd` (or the command configured as `faxrcvdcmd` in `gofax.conf`) with the following additional environment variables:
+
+* `HANGUPCAUSE` — FreeSWITCH hangup cause
+* `TRANSFER_RATE` — Negotiated transfer rate in bps
+* `TRANSFERRED_PAGES` — Number of pages successfully transferred
+* `TOTAL_PAGES` — Total number of pages in the transmission
+* `ECM` — `true` if ECM was used, `false` otherwise
+* `UUID` — FreeSWITCH channel UUID of the received call
+* `TIME_START` — Unix timestamp when the fax session started
+* `TIME_END` — Unix timestamp when the fax session ended
+* `REMOTE_STATION_ID` — Remote station identifier (TSI/CSI) reported by the sender
 
 ### Fallback from T.38 to SpanDSP softmodem
 
