@@ -223,9 +223,9 @@ Disable T.38 transmission for destination 012345:
 fs_cli -x 'db insert/override-012345/fax_enable_t38/false'
 ```
 
-See https://freeswitch.org/confluence/display/FREESWITCH/mod_spandsp#mod_spandsp-Controllingtheapp for mod_spandsp parameters.
+See https://developer.signalwire.com/freeswitch/applications/fax#input-variables for mod_spandsp parameters.
 
-See https://freeswitch.org/confluence/display/FREESWITCH/mod_db for a reference on how to use mod_db.
+See https://developer.signalwire.com/freeswitch/applications/utilities#mod_db-persistent-key-value-store-and-call-limiting for a reference on how to use mod_db.
 
 # Building
 
